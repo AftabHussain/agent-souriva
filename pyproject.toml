@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-souriva"
+version = "0.1.0"
+description = "Local document-grounded agent with citations and explicit abstention"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = {file = "LICENSE"}
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.30,<1",
+  "numpy>=1.26,<3",
+  "faiss-cpu>=1.8,<2",
+  "pypdf>=5,<7",
+  "pydantic-settings>=2.6,<3",
+  "httpx>=0.27,<1",
+]
+
+[project.optional-dependencies]
+tracking = ["mlflow>=2.17,<4"]
+mcp = ["mcp>=1.2,<2"]
+evaluation = ["ragas>=0.2,<1", "datasets>=3,<5"]
+training = ["transformers>=4.46,<5", "peft>=0.13,<1", "trl>=0.12,<1"]
+dev = ["pytest>=8,<10", "pytest-cov>=6,<8", "ruff>=0.8,<1"]
+
+[tool.setuptools.packages.find]
+include = ["souriva*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
