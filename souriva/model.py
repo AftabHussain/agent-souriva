@@ -1,4 +1,5 @@
 import json
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
@@ -80,9 +81,12 @@ class OpenAICompatibleModel:
         with urlopen(request, timeout=120) as response:
             text = json.load(response)["choices"][0]["message"]["content"].strip()
 
-        # Citations are parsed as an allow-list; unknown model-generated IDs are discarded.
-        valid = tuple(item.id for item in evidence if f"[{item.id}]" in text)
-        return ModelReply(text=text, citation_ids=valid)
+        # Preserve every emitted ID so alignment can reject any citation outside its allow-list.
+        return ModelReply(text=text, citation_ids=parse_citation_ids(text))
+
+
+def parse_citation_ids(text: str) -> tuple[str, ...]:
+    return tuple(re.findall(r"\[([^\[\]]+)\]", text))
 
 
 def create_model(
