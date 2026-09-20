@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Callable, Protocol
+from typing import Protocol
 
 from souriva.alignment import ABSTENTION, GroundedAnswer, ground_reply
 from souriva.model import Evidence, ModelAdapter

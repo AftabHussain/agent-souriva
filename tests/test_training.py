@@ -1,7 +1,7 @@
 import pytest
 
-from training.sft import format_trace
 from training.rl import RewardSignals, grounded_reward, preference_record
+from training.sft import format_trace
 
 
 def test_sft_trace_contains_action_answer_and_citations():
@@ -33,4 +33,3 @@ def test_grounded_reward_prefers_supported_behavior():
         good,
     )
     assert pair["chosen"] == "Supported"
-

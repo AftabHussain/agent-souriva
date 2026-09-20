@@ -1,7 +1,6 @@
 from souriva.alignment import ABSTENTION, ground_reply
 from souriva.model import Evidence, ModelReply
 
-
 EVIDENCE = [Evidence("chunk-a", "Supported fact.", "guide.md", "chunk 1", 0.8)]
 
 
@@ -22,4 +21,3 @@ def test_abstains_for_invented_or_missing_citations():
     missing = ground_reply(ModelReply("Claim"), EVIDENCE, 0.2)
     assert invented.abstained and missing.abstained
     assert invented.citations == missing.citations == ()
-

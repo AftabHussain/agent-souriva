@@ -17,4 +17,3 @@ def test_mock_model_declines_without_evidence():
     reply = MockModel().answer("Unknown?", [])
     assert reply.citation_ids == ()
     assert "enough evidence" in reply.text
-

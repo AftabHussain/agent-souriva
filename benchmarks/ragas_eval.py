@@ -9,7 +9,6 @@ from souriva.rag import ingest_paths
 from souriva.runtime import create_runtime
 from souriva.tracking import log_evaluation
 
-
 ROOT = Path(__file__).parents[1]
 
 

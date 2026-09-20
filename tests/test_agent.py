@@ -30,13 +30,16 @@ def test_agent_abstains_before_model_without_evidence():
 
 
 def test_agent_routes_explicit_calculation_to_approved_tool():
-    result = DocumentAgent(StubRetriever([]), StubModel(), calculator=calculator).ask("calculate: 6 * 7")
+    result = DocumentAgent(StubRetriever([]), StubModel(), calculator=calculator).ask(
+        "calculate: 6 * 7"
+    )
     assert result.actions == (Action.USE_TOOL, Action.ANSWER)
     assert result.answer.text == "The result is 42."
 
 
 def test_agent_abstains_when_calculation_is_invalid():
-    result = DocumentAgent(StubRetriever([]), StubModel(), calculator=calculator).ask("calculate: open('x')")
+    result = DocumentAgent(StubRetriever([]), StubModel(), calculator=calculator).ask(
+        "calculate: open('x')"
+    )
     assert result.actions == (Action.USE_TOOL, Action.ABSTAIN)
     assert result.answer.reason == "tool_error"
-

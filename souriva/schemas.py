@@ -46,4 +46,3 @@ class AskResponse(BaseModel):
     abstained: bool
     reason: str | None
     actions: list[str]
-

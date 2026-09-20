@@ -36,4 +36,3 @@ def create_runtime(settings: Settings | None = None) -> Runtime:
         calculator=tools.calculator,
     )
     return Runtime(settings, store, tools, agent)
-

@@ -2,8 +2,13 @@ import argparse
 import json
 from pathlib import Path
 
-
-REQUIRED_FIELDS = {"question", "retrieved_context", "desired_action", "grounded_answer", "citations"}
+REQUIRED_FIELDS = {
+    "question",
+    "retrieved_context",
+    "desired_action",
+    "grounded_answer",
+    "citations",
+}
 
 
 def format_trace(trace: dict) -> str:
@@ -35,18 +40,21 @@ def main() -> None:
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
     from trl import SFTConfig, SFTTrainer
 
-    records = [json.loads(line) for line in args.data.read_text(encoding="utf-8").splitlines() if line]
+    records = [
+        json.loads(line) for line in args.data.read_text(encoding="utf-8").splitlines() if line
+    ]
     dataset = Dataset.from_dict({"text": [format_trace(record) for record in records]})
     quantization = BitsAndBytesConfig(load_in_4bit=True) if args.qlora else None
     model = AutoModelForCausalLM.from_pretrained(args.model, quantization_config=quantization)
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     lora = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05, target_modules="all-linear")
     config = SFTConfig(output_dir=str(args.output), dataset_text_field="text", num_train_epochs=1)
-    trainer = SFTTrainer(model=model, args=config, train_dataset=dataset, tokenizer=tokenizer, peft_config=lora)
+    trainer = SFTTrainer(
+        model=model, args=config, train_dataset=dataset, tokenizer=tokenizer, peft_config=lora
+    )
     trainer.train()
     trainer.save_model()
 
 
 if __name__ == "__main__":
     main()
-

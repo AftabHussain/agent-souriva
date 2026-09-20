@@ -4,7 +4,6 @@ from souriva.config import get_settings
 from souriva.rag import FaissStore, HashEmbeddings
 from souriva.tools import DocumentTools
 
-
 settings = get_settings()
 store = FaissStore(
     HashEmbeddings(settings.embedding_dimensions), settings.index_path, settings.metadata_path
@@ -34,4 +33,3 @@ def calculate(expression: str) -> float:
 
 if __name__ == "__main__":
     mcp.run()
-

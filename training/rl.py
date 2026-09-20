@@ -33,4 +33,3 @@ def preference_record(chosen: dict, rejected: dict, signals: RewardSignals) -> d
         "rejected": rejected["response"],
         "reward": grounded_reward(signals),
     }
-

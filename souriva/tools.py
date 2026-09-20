@@ -1,10 +1,9 @@
 import ast
-from dataclasses import asdict
 import operator
-from typing import Callable
+from collections.abc import Callable
+from dataclasses import asdict
 
 from souriva.rag import FaissStore
-
 
 _BINARY: dict[type[ast.operator], Callable[[float, float], float]] = {
     ast.Add: operator.add,
@@ -62,4 +61,3 @@ class DocumentTools:
 
     def calculator(self, expression: str) -> float:
         return calculator(expression)
-

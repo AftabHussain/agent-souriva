@@ -15,4 +15,3 @@ def test_hash_embeddings_are_normalized_and_deterministic():
 
 def test_hash_embeddings_handle_empty_batches():
     assert HashEmbeddings(16).embed([]).shape == (0, 16)
-

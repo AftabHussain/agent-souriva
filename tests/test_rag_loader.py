@@ -22,4 +22,3 @@ def test_rejects_unsupported_documents(tmp_path: Path):
     path.write_text("a,b", encoding="utf-8")
     with pytest.raises(ValueError, match="Unsupported document type"):
         load_document(path)
-

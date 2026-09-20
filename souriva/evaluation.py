@@ -1,7 +1,7 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 from statistics import mean
 from time import perf_counter
-from typing import Iterable
 
 from souriva.agent import Action, DocumentAgent
 
@@ -36,7 +36,9 @@ def evaluate_cases(agent: DocumentAgent, cases: Iterable[EvalCase]) -> tuple[dic
                 "reference": case.reference,
                 "retrieval_hit": retrieval_hit,
                 "citation_correct": cited_ids <= retrieved_ids,
-                "unsupported_answer": not result.answer.abstained and not cited_ids,
+                "unsupported_answer": not result.answer.abstained
+                and Action.USE_TOOL not in result.actions
+                and not cited_ids,
                 "abstention_correct": result.answer.abstained is not case.answerable,
                 "tool_use_correct": case.expected_action is None
                 or case.expected_action in result.actions,
@@ -56,4 +58,3 @@ def evaluate_cases(agent: DocumentAgent, cases: Iterable[EvalCase]) -> tuple[dic
     metrics = {name: mean(float(row[name]) for row in rows) for name in boolean_metrics}
     metrics["latency_ms"] = mean(row["latency_ms"] for row in rows)
     return metrics, rows
-

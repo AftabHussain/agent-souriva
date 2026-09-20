@@ -1,15 +1,14 @@
-from dataclasses import asdict, dataclass
 import hashlib
 import json
 import re
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable
 
-import numpy as np
 import faiss
+import numpy as np
 
 from souriva.model import Evidence
-
 
 SUPPORTED_SUFFIXES = {".pdf", ".md", ".markdown", ".txt"}
 TOKEN_PATTERN = re.compile(r"[a-z0-9][a-z0-9_-]+")
@@ -80,8 +79,12 @@ def chunk_parts(
             text = " ".join(part.text[start:end].split())
             if text:
                 location = f"{part.location}, chunk {number}"
-                digest = hashlib.sha256(f"{part.source}:{location}:{text}".encode()).hexdigest()[:12]
-                chunks.append(Chunk(id=f"chunk-{digest}", text=text, source=part.source, location=location))
+                digest = hashlib.sha256(f"{part.source}:{location}:{text}".encode()).hexdigest()[
+                    :12
+                ]
+                chunks.append(
+                    Chunk(id=f"chunk-{digest}", text=text, source=part.source, location=location)
+                )
             if end == len(part.text):
                 break
             start = end - overlap
@@ -150,7 +153,9 @@ class FaissStore:
         index = faiss.read_index(str(self.index_path))
         if index.d != self.embeddings.dimensions:
             raise ValueError("Stored index dimensions do not match embedding configuration")
-        chunks = [Chunk(**item) for item in json.loads(self.metadata_path.read_text(encoding="utf-8"))]
+        chunks = [
+            Chunk(**item) for item in json.loads(self.metadata_path.read_text(encoding="utf-8"))
+        ]
         if index.ntotal != len(chunks):
             raise ValueError("FAISS index and metadata count do not match")
         self.index, self.chunks = index, chunks
@@ -185,4 +190,3 @@ class FaissStore:
 def ingest_paths(store: FaissStore, paths: Iterable[Path], chunk_size: int, overlap: int) -> int:
     parts = load_documents(paths)
     return store.replace(chunk_parts(parts, chunk_size=chunk_size, overlap=overlap))
-

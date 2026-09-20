@@ -1,8 +1,7 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from souriva.model import Evidence, ModelReply
-
 
 ABSTENTION = "I do not have enough evidence to answer."
 
@@ -44,4 +43,3 @@ def ground_reply(
         if (item := eligible.get(item_id)) is not None
     )
     return GroundedAnswer(reply.text, citations, False)
-

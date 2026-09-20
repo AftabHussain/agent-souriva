@@ -23,4 +23,3 @@ def test_chunk_ids_are_stable():
 def test_rejects_invalid_chunk_configuration():
     with pytest.raises(ValueError, match="overlap smaller"):
         chunk_parts([], chunk_size=10, overlap=10)
-

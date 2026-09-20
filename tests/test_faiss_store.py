@@ -18,4 +18,3 @@ def test_missing_store_load_is_clean(tmp_path: Path):
     store = FaissStore(HashEmbeddings(16), tmp_path / "missing.faiss", tmp_path / "missing.json")
     assert not store.load()
     assert store.count == 0
-

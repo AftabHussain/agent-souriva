@@ -31,8 +31,11 @@ training = [
 ]
 dev = ["pytest>=8,<10", "pytest-cov>=6,<8", "ruff>=0.8,<1"]
 
+[tool.setuptools]
+py-modules = ["app"]
+
 [tool.setuptools.packages.find]
-include = ["souriva*"]
+include = ["souriva*", "benchmarks*", "training*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

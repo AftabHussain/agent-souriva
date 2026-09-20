@@ -67,4 +67,3 @@ def log_evaluation(metrics: dict[str, float], rows: list[dict], settings: Settin
         )
         mlflow.log_metrics(metrics)
         mlflow.log_dict({"cases": rows}, "evaluation.json")
-

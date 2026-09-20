@@ -33,4 +33,3 @@ def test_evaluation_rejects_empty_dataset():
         assert "At least one" in str(exc)
     else:
         raise AssertionError("empty evaluation dataset must fail")
-

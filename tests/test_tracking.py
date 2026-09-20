@@ -14,4 +14,3 @@ def test_tracking_is_noop_when_disabled(tmp_path):
 
     assert log_agent_run("Unknown?", result, 1.5, settings) is None
     assert log_evaluation({"latency_ms": 1.5}, [], settings) is None
-

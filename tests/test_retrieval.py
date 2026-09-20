@@ -36,4 +36,3 @@ def test_search_applies_threshold(tmp_path: Path):
     store = make_store(tmp_path)
     store.replace([Chunk("chunk-a", "alpha", "a.txt", "chunk 1")])
     assert store.search("unrelated", min_score=0.1) == []
-

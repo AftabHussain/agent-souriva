@@ -1,7 +1,8 @@
-from dataclasses import dataclass
 import json
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import Protocol
 from urllib.request import Request, urlopen
-from typing import Protocol, Sequence
 
 
 @dataclass(frozen=True)
@@ -76,7 +77,7 @@ class OpenAICompatibleModel:
             data=json.dumps(payload).encode(),
             headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
         )
-        with urlopen(request, timeout=120) as response:  # noqa: S310 - configured local endpoint
+        with urlopen(request, timeout=120) as response:
             text = json.load(response)["choices"][0]["message"]["content"].strip()
 
         # Citations are parsed as an allow-list; unknown model-generated IDs are discarded.
@@ -84,10 +85,11 @@ class OpenAICompatibleModel:
         return ModelReply(text=text, citation_ids=valid)
 
 
-def create_model(backend: str, base_url: str = "", model: str = "", api_key: str = "") -> ModelAdapter:
+def create_model(
+    backend: str, base_url: str = "", model: str = "", api_key: str = ""
+) -> ModelAdapter:
     if backend == "mock":
         return MockModel()
     if backend == "openai-compatible":
         return OpenAICompatibleModel(base_url, model, api_key)
     raise ValueError(f"Unknown model backend: {backend}")
-

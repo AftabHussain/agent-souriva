@@ -4,17 +4,22 @@ from fastapi import FastAPI, HTTPException
 
 from souriva.rag import ingest_paths
 from souriva.runtime import create_runtime
-from souriva.schemas import AskRequest, AskResponse
-from souriva.schemas import DocumentsRequest, IngestResponse, RetrieveRequest, RetrieveResponse
+from souriva.schemas import (
+    AskRequest,
+    AskResponse,
+    DocumentsRequest,
+    IngestResponse,
+    RetrieveRequest,
+    RetrieveResponse,
+)
 from souriva.tracking import log_agent_run
-
 
 app = FastAPI(title="AgentSouriva", version="0.1.0")
 runtime = create_runtime()
 
 
 @app.get("/health")
-def health() -> dict:
+async def health() -> dict:
     return {
         "status": "ok",
         "documents_ready": runtime.store.count > 0,
@@ -24,7 +29,7 @@ def health() -> dict:
 
 
 @app.post("/documents", response_model=IngestResponse)
-def ingest_documents(request: DocumentsRequest) -> IngestResponse:
+async def ingest_documents(request: DocumentsRequest) -> IngestResponse:
     try:
         count = ingest_paths(
             runtime.store,
@@ -38,7 +43,7 @@ def ingest_documents(request: DocumentsRequest) -> IngestResponse:
 
 
 @app.post("/retrieve", response_model=RetrieveResponse)
-def retrieve(request: RetrieveRequest) -> RetrieveResponse:
+async def retrieve(request: RetrieveRequest) -> RetrieveResponse:
     evidence = runtime.store.search(
         request.query, top_k=request.top_k, min_score=runtime.settings.min_relevance
     )
@@ -46,7 +51,7 @@ def retrieve(request: RetrieveRequest) -> RetrieveResponse:
 
 
 @app.post("/ask", response_model=AskResponse)
-def ask(request: AskRequest) -> AskResponse:
+async def ask(request: AskRequest) -> AskResponse:
     started = perf_counter()
     result = runtime.agent.ask(request.question)
     log_agent_run(request.question, result, (perf_counter() - started) * 1000, runtime.settings)
