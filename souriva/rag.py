@@ -8,6 +8,8 @@ from typing import Iterable
 import numpy as np
 import faiss
 
+from souriva.model import Evidence
+
 
 SUPPORTED_SUFFIXES = {".pdf", ".md", ".markdown", ".txt"}
 TOKEN_PATTERN = re.compile(r"[a-z0-9][a-z0-9_-]+")
@@ -156,4 +158,31 @@ class FaissStore:
 
     def get(self, chunk_id: str) -> Chunk | None:
         return next((chunk for chunk in self.chunks if chunk.id == chunk_id), None)
+
+    def search(self, query: str, top_k: int = 4, min_score: float = 0.0) -> list[Evidence]:
+        if not query.strip() or top_k < 1 or not self.chunks:
+            return []
+        query_vector = self.embeddings.embed([query])
+        limit = min(top_k, self.count)
+        scores, positions = self.index.search(query_vector, limit)
+        results: list[Evidence] = []
+        for score, position in zip(scores[0], positions[0]):
+            if position < 0 or float(score) < min_score:
+                continue
+            chunk = self.chunks[int(position)]
+            results.append(
+                Evidence(
+                    id=chunk.id,
+                    text=chunk.text,
+                    source=chunk.source,
+                    location=chunk.location,
+                    score=round(float(score), 6),
+                )
+            )
+        return results
+
+
+def ingest_paths(store: FaissStore, paths: Iterable[Path], chunk_size: int, overlap: int) -> int:
+    parts = load_documents(paths)
+    return store.replace(chunk_parts(parts, chunk_size=chunk_size, overlap=overlap))
 
