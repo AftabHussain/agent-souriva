@@ -1,0 +1,21 @@
+# Model adapter and local backend
+
+## Change
+
+Added the model protocol, shared evidence and reply values, and a deterministic extractive mock backend.
+
+## Architecture
+
+The adapter separates agent behavior from model serving. Evidence enters through a small typed contract and model replies identify the chunk IDs they cite.
+
+## Design notes
+
+The mock selects at most two chunks and extracts one sentence from each. It is deliberately deterministic so ingestion, retrieval, grounding, and API behavior can be exercised without a running language model.
+
+## Verification
+
+Ran `python -m compileall souriva tests`. The modules compiled successfully. The test runner is added as a development dependency and tests will run after dependencies are installed.
+
+## Result
+
+The project can generate a predictable evidence-linked reply through the same interface a GPT-OSS-20B adapter will implement.
