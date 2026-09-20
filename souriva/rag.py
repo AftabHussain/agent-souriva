@@ -1,10 +1,12 @@
 from dataclasses import asdict, dataclass
 import hashlib
+import json
 import re
 from pathlib import Path
 from typing import Iterable
 
 import numpy as np
+import faiss
 
 
 SUPPORTED_SUFFIXES = {".pdf", ".md", ".markdown", ".txt"}
@@ -110,4 +112,48 @@ class HashEmbeddings:
         if norm:
             vector /= norm
         return vector
+
+
+class FaissStore:
+    """Persistent exact inner-product index with sidecar chunk metadata."""
+
+    def __init__(self, embeddings: HashEmbeddings, index_path: Path, metadata_path: Path) -> None:
+        self.embeddings = embeddings
+        self.index_path = index_path
+        self.metadata_path = metadata_path
+        self.index = faiss.IndexFlatIP(embeddings.dimensions)
+        self.chunks: list[Chunk] = []
+
+    @property
+    def count(self) -> int:
+        return len(self.chunks)
+
+    def replace(self, chunks: Iterable[Chunk]) -> int:
+        self.chunks = list(chunks)
+        self.index = faiss.IndexFlatIP(self.embeddings.dimensions)
+        if self.chunks:
+            self.index.add(self.embeddings.embed(chunk.text for chunk in self.chunks))
+        self.save()
+        return self.count
+
+    def save(self) -> None:
+        self.index_path.parent.mkdir(parents=True, exist_ok=True)
+        faiss.write_index(self.index, str(self.index_path))
+        payload = [chunk.to_dict() for chunk in self.chunks]
+        self.metadata_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    def load(self) -> bool:
+        if not self.index_path.exists() or not self.metadata_path.exists():
+            return False
+        index = faiss.read_index(str(self.index_path))
+        if index.d != self.embeddings.dimensions:
+            raise ValueError("Stored index dimensions do not match embedding configuration")
+        chunks = [Chunk(**item) for item in json.loads(self.metadata_path.read_text(encoding="utf-8"))]
+        if index.ntotal != len(chunks):
+            raise ValueError("FAISS index and metadata count do not match")
+        self.index, self.chunks = index, chunks
+        return True
+
+    def get(self, chunk_id: str) -> Chunk | None:
+        return next((chunk for chunk in self.chunks if chunk.id == chunk_id), None)
 
