@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     model_api_key: str = "local"
     mlflow_tracking_uri: str = "file:./mlruns"
     mlflow_experiment: str = "baseline-rag"
+    mlflow_enabled: bool = False
 
     @property
     def index_path(self) -> Path:
@@ -36,4 +37,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

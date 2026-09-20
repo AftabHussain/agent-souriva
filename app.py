@@ -1,9 +1,12 @@
+from time import perf_counter
+
 from fastapi import FastAPI, HTTPException
 
 from souriva.rag import ingest_paths
 from souriva.runtime import create_runtime
 from souriva.schemas import AskRequest, AskResponse
 from souriva.schemas import DocumentsRequest, IngestResponse, RetrieveRequest, RetrieveResponse
+from souriva.tracking import log_agent_run
 
 
 app = FastAPI(title="AgentSouriva", version="0.1.0")
@@ -44,7 +47,9 @@ def retrieve(request: RetrieveRequest) -> RetrieveResponse:
 
 @app.post("/ask", response_model=AskResponse)
 def ask(request: AskRequest) -> AskResponse:
+    started = perf_counter()
     result = runtime.agent.ask(request.question)
+    log_agent_run(request.question, result, (perf_counter() - started) * 1000, runtime.settings)
     return AskResponse(
         answer=result.answer.text,
         citations=[citation.__dict__ for citation in result.answer.citations],
@@ -52,4 +57,3 @@ def ask(request: AskRequest) -> AskResponse:
         reason=result.answer.reason,
         actions=[action.value for action in result.actions],
     )
-
