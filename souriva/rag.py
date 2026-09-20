@@ -1,10 +1,14 @@
 from dataclasses import asdict, dataclass
 import hashlib
+import re
 from pathlib import Path
 from typing import Iterable
 
+import numpy as np
+
 
 SUPPORTED_SUFFIXES = {".pdf", ".md", ".markdown", ".txt"}
+TOKEN_PATTERN = re.compile(r"[a-z0-9][a-z0-9_-]+")
 
 
 @dataclass(frozen=True)
@@ -79,4 +83,31 @@ def chunk_parts(
             start = end - overlap
             number += 1
     return chunks
+
+
+class HashEmbeddings:
+    """Small deterministic embedding backend requiring no model download."""
+
+    def __init__(self, dimensions: int = 384) -> None:
+        if dimensions < 8:
+            raise ValueError("embedding dimensions must be at least 8")
+        self.dimensions = dimensions
+
+    def embed(self, texts: Iterable[str]) -> np.ndarray:
+        vectors = [self._embed_one(text) for text in texts]
+        if not vectors:
+            return np.empty((0, self.dimensions), dtype="float32")
+        return np.stack(vectors)
+
+    def _embed_one(self, text: str) -> np.ndarray:
+        vector = np.zeros(self.dimensions, dtype="float32")
+        tokens = TOKEN_PATTERN.findall(text.lower())
+        for token in tokens:
+            digest = hashlib.blake2b(token.encode(), digest_size=8).digest()
+            value = int.from_bytes(digest)
+            vector[value % self.dimensions] += 1.0 if value & 1 else -1.0
+        norm = np.linalg.norm(vector)
+        if norm:
+            vector /= norm
+        return vector
 
