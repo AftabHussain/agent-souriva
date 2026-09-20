@@ -20,9 +20,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-tracking = ["mlflow>=2.17,<4"]
+tracking = ["mlflow>=3,<4"]
 mcp = ["mcp>=1.2,<2"]
-evaluation = ["ragas>=0.2,<0.3", "datasets>=3,<4"]
+evaluation = [
+  "ragas>=0.2,<0.3",
+  "datasets>=3,<4",
+  "langchain>=0.2,<0.4",
+  "langchain-community>=0.2,<0.4",
+  "langchain-openai>=0.1,<0.4",
+]
 training = [
   "transformers>=4.46,<5",
   "peft>=0.13,<1",

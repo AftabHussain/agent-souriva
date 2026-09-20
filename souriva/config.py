@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     model_base_url: str = "http://localhost:8001/v1"
     model_name: str = "openai/gpt-oss-20b"
     model_api_key: str = "local"
-    mlflow_tracking_uri: str = "file:./mlruns"
+    mlflow_tracking_uri: str = "sqlite:///mlflow.db"
     mlflow_experiment: str = "baseline-rag"
     mlflow_enabled: bool = False
 

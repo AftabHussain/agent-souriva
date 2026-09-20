@@ -168,7 +168,7 @@ Agent-run tracking is centralized and disabled by default. Enable it with:
 
 ```bash
 export SOURIVA_MLFLOW_ENABLED=true
-export SOURIVA_MLFLOW_TRACKING_URI=file:./mlruns
+export SOURIVA_MLFLOW_TRACKING_URI=sqlite:///mlflow.db
 export SOURIVA_MLFLOW_EXPERIMENT=baseline-rag
 uvicorn app:app
 ```
@@ -176,7 +176,7 @@ uvicorn app:app
 Each `/ask` run records the question, retrieved chunks and scores, answer, citations, action trace, tool use, latency, and relevant configuration. View local runs with:
 
 ```bash
-mlflow ui --backend-store-uri ./mlruns
+mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
 
 ## Evaluation
