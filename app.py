@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 
 from souriva.rag import ingest_paths
 from souriva.runtime import create_runtime
-from souriva.schemas import DocumentsRequest, IngestResponse
+from souriva.schemas import DocumentsRequest, IngestResponse, RetrieveRequest, RetrieveResponse
 
 
 app = FastAPI(title="AgentSouriva", version="0.1.0")
@@ -31,4 +31,12 @@ def ingest_documents(request: DocumentsRequest) -> IngestResponse:
     except (FileNotFoundError, OSError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return IngestResponse(chunks=count, sources=[path.name for path in request.paths])
+
+
+@app.post("/retrieve", response_model=RetrieveResponse)
+def retrieve(request: RetrieveRequest) -> RetrieveResponse:
+    evidence = runtime.store.search(
+        request.query, top_k=request.top_k, min_score=runtime.settings.min_relevance
+    )
+    return RetrieveResponse(evidence=[item.__dict__ for item in evidence])
 
