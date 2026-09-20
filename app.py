@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 
 from souriva.rag import ingest_paths
 from souriva.runtime import create_runtime
+from souriva.schemas import AskRequest, AskResponse
 from souriva.schemas import DocumentsRequest, IngestResponse, RetrieveRequest, RetrieveResponse
 
 
@@ -39,4 +40,16 @@ def retrieve(request: RetrieveRequest) -> RetrieveResponse:
         request.query, top_k=request.top_k, min_score=runtime.settings.min_relevance
     )
     return RetrieveResponse(evidence=[item.__dict__ for item in evidence])
+
+
+@app.post("/ask", response_model=AskResponse)
+def ask(request: AskRequest) -> AskResponse:
+    result = runtime.agent.ask(request.question)
+    return AskResponse(
+        answer=result.answer.text,
+        citations=[citation.__dict__ for citation in result.answer.citations],
+        abstained=result.answer.abstained,
+        reason=result.answer.reason,
+        actions=[action.value for action in result.actions],
+    )
 

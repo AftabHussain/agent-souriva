@@ -28,3 +28,22 @@ class EvidenceResponse(BaseModel):
 class RetrieveResponse(BaseModel):
     evidence: list[EvidenceResponse]
 
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=4000)
+
+
+class CitationResponse(BaseModel):
+    id: str
+    source: str
+    location: str
+    score: float
+
+
+class AskResponse(BaseModel):
+    answer: str
+    citations: list[CitationResponse]
+    abstained: bool
+    reason: str | None
+    actions: list[str]
+

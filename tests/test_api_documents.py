@@ -28,6 +28,13 @@ def test_documents_endpoint_ingests_local_file(monkeypatch, tmp_path):
     assert retrieved.status_code == 200
     assert retrieved.json()["evidence"][0]["source"] == "manual.txt"
 
+    answer = load_app(monkeypatch, tmp_path).post(
+        "/ask", json={"question": "How does token authentication work?"}
+    )
+    assert answer.status_code == 200
+    assert answer.json()["abstained"] is False
+    assert answer.json()["citations"][0]["source"] == "manual.txt"
+
 
 def test_documents_endpoint_reports_bad_path(monkeypatch, tmp_path):
     response = load_app(monkeypatch, tmp_path).post(
@@ -39,4 +46,11 @@ def test_documents_endpoint_reports_bad_path(monkeypatch, tmp_path):
 def test_retrieve_validates_top_k(monkeypatch, tmp_path):
     response = load_app(monkeypatch, tmp_path).post("/retrieve", json={"query": "x", "top_k": 0})
     assert response.status_code == 422
+
+
+def test_ask_abstains_on_empty_corpus(monkeypatch, tmp_path):
+    response = load_app(monkeypatch, tmp_path).post("/ask", json={"question": "Unknown fact?"})
+    assert response.status_code == 200
+    assert response.json()["abstained"] is True
+    assert response.json()["citations"] == []
 
