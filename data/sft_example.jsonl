@@ -1,0 +1,2 @@
+{"question":"What vector index is used?","retrieved_context":["AgentSouriva stores normalized vectors in a FAISS index."],"desired_action":"ANSWER","grounded_answer":"AgentSouriva uses FAISS.","citations":["chunk-example"]}
+
