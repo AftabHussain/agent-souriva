@@ -1,0 +1,2 @@
+The local HTTP service uses FastAPI. POST /documents indexes server-local PDF, Markdown, or text files. POST /retrieve returns ranked evidence. POST /ask returns an answer, structured citations, an abstention flag, and the agent action trace.
+

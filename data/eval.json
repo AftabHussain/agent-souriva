@@ -1,0 +1,26 @@
+[
+  {
+    "question": "What vector index does AgentSouriva use?",
+    "answerable": true,
+    "expected_sources": ["architecture.md"],
+    "reference": "AgentSouriva uses a FAISS vector index."
+  },
+  {
+    "question": "What does POST /ask return?",
+    "answerable": true,
+    "expected_sources": ["api.txt"],
+    "reference": "It returns an answer, citations, an abstention flag, and the action trace."
+  },
+  {
+    "question": "Which database server is required?",
+    "answerable": false,
+    "reference": "The documents do not specify a required database server."
+  },
+  {
+    "question": "calculate: (40 * 3) / 2",
+    "answerable": true,
+    "expected_action": "USE_TOOL",
+    "reference": "The result is 60."
+  }
+]
+
