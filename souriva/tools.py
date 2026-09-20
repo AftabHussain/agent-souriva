@@ -1,6 +1,9 @@
 import ast
+from dataclasses import asdict
 import operator
 from typing import Callable
+
+from souriva.rag import FaissStore
 
 
 _BINARY: dict[type[ast.operator], Callable[[float, float], float]] = {
@@ -42,4 +45,21 @@ def calculator(expression: str) -> float:
     if abs(result) > 1e100:
         raise ValueError("Result is too large")
     return result
+
+
+class DocumentTools:
+    """Approved tool surface shared by the agent and MCP transport."""
+
+    def __init__(self, store: FaissStore) -> None:
+        self.store = store
+
+    def search_documents(self, query: str, top_k: int = 4) -> list[dict]:
+        return [asdict(item) for item in self.store.search(query, top_k=top_k)]
+
+    def get_document_chunk(self, chunk_id: str) -> dict | None:
+        chunk = self.store.get(chunk_id)
+        return chunk.to_dict() if chunk else None
+
+    def calculator(self, expression: str) -> float:
+        return calculator(expression)
 
