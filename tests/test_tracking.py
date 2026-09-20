@@ -1,7 +1,7 @@
 from souriva.agent import Action, AgentResult
 from souriva.alignment import GroundedAnswer
 from souriva.config import Settings
-from souriva.tracking import log_agent_run
+from souriva.tracking import log_agent_run, log_evaluation
 
 
 def test_tracking_is_noop_when_disabled(tmp_path):
@@ -13,4 +13,5 @@ def test_tracking_is_noop_when_disabled(tmp_path):
     )
 
     assert log_agent_run("Unknown?", result, 1.5, settings) is None
+    assert log_evaluation({"latency_ms": 1.5}, [], settings) is None
 

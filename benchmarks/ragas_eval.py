@@ -7,6 +7,7 @@ from souriva.config import Settings
 from souriva.evaluation import EvalCase, evaluate_cases
 from souriva.rag import ingest_paths
 from souriva.runtime import create_runtime
+from souriva.tracking import log_evaluation
 
 
 ROOT = Path(__file__).parents[1]
@@ -52,8 +53,13 @@ def run_ragas(rows: list[dict]) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run AgentSouriva RAG evaluation")
     parser.add_argument("--ragas", action="store_true", help="run evaluator-model RAGAS metrics")
+    parser.add_argument("--mlflow", action="store_true", help="record results with MLflow")
     args = parser.parse_args()
-    settings = Settings(data_dir=ROOT / "artifacts" / "evaluation", model_backend="mock")
+    settings = Settings(
+        data_dir=ROOT / "artifacts" / "evaluation",
+        model_backend="mock",
+        mlflow_enabled=args.mlflow,
+    )
     runtime = create_runtime(settings)
     documents = sorted((ROOT / "data" / "sample_docs").glob("*"))
     ingest_paths(runtime.store, documents, settings.chunk_size, settings.chunk_overlap)
@@ -62,9 +68,11 @@ def main() -> None:
     output = {"direct": direct}
     if args.ragas:
         output["ragas"] = run_ragas(rows)
+    logged_metrics = dict(direct)
+    logged_metrics.update({f"ragas_{key}": value for key, value in output.get("ragas", {}).items()})
+    log_evaluation(logged_metrics, rows, settings)
     print(json.dumps(output, indent=2))
 
 
 if __name__ == "__main__":
     main()
-

@@ -44,3 +44,27 @@ def log_agent_run(
         )
         mlflow.log_dict(trace, "trace.json")
 
+
+def log_evaluation(metrics: dict[str, float], rows: list[dict], settings: Settings) -> None:
+    """Record aggregate measurements and case-level outputs in one MLflow run."""
+    if not settings.mlflow_enabled:
+        return
+    try:
+        import mlflow
+    except ImportError as exc:
+        raise RuntimeError("Install AgentSouriva with the 'tracking' extra") from exc
+
+    mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
+    mlflow.set_experiment(settings.mlflow_experiment)
+    with mlflow.start_run(run_name="evaluation"):
+        mlflow.log_params(
+            {
+                "model_backend": settings.model_backend,
+                "top_k": settings.retrieval_top_k,
+                "min_relevance": settings.min_relevance,
+                "cases": len(rows),
+            }
+        )
+        mlflow.log_metrics(metrics)
+        mlflow.log_dict({"cases": rows}, "evaluation.json")
+
