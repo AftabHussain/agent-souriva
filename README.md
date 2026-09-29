@@ -1,72 +1,122 @@
 # AgentSouriva
 
-AgentSouriva is a local document-grounded agent for PDF, Markdown, and text corpora. It indexes document chunks in FAISS, retrieves evidence for each question, and returns source-aware citations. When retrieval or citation checks fail, it abstains instead of returning an unsupported document answer.
+AgentSouriva is a local, evidence-grounded agent for reasoning over PDF, Markdown, and text collections.
 
-The default model and embedding backends run without a model server. An OpenAI-compatible adapter provides the boundary for GPT-OSS-20B.
+It is built around a simple question: **how can an AI agent answer from documents while keeping its evidence, tool use, and uncertainty visible?**
 
-## Use cases
+Given a collection of documents, AgentSouriva indexes their contents, retrieves relevant evidence for each question, and returns source-aware answers. It can validate citations against retrieved evidence, route approved tasks through dedicated tools, and abstain when the available documents do not sufficiently support an answer.
 
-- Compare methods, datasets, metrics, and reported results across papers.
-- Answer questions from technical manuals and architecture documentation.
-- Extract authentication, endpoint, and usage details from API documentation.
-- Compare specifications across documents with source references.
-- Retrieve documented quantities and perform an approved calculation.
-- Detect when the indexed documents do not contain the requested information.
+The project is designed as a compact environment for exploring **trustworthy document-grounded agents**, including retrieval, constrained tool use, citation validation, abstention, evaluation, and optional model adaptation.
 
-## Architecture
+## Why AgentSouriva?
+
+Retrieval-augmented systems can make language models useful over private or specialized documents, but retrieval alone does not guarantee that an answer is supported by the retrieved evidence.
+
+AgentSouriva makes the important parts of this process explicit:
+
+- **Evidence retrieval**: answers are grounded in chunks retrieved from the indexed corpus.
+- **Source-aware citations**: responses retain references to the evidence used.
+- **Citation validation**: citation IDs are checked against the evidence actually retrieved.
+- **Controlled tool use**: the agent operates through a small set of approved tools.
+- **Abstention**: unsupported document questions can return an abstention rather than an unsupported answer.
+- **Evaluation**: retrieval, citation behavior, abstention, tool use, unsupported answers, and latency can be measured directly.
+
+This makes AgentSouriva useful both as a local document assistant and as an experimental platform for studying grounded agent behavior.
+
+## Example Uses
+
+AgentSouriva can be used to:
+
+- compare methods, datasets, metrics, and reported results across papers;
+- answer questions from technical manuals and architecture documentation;
+- extract authentication, endpoint, and usage details from API documentation;
+- compare specifications across documents with source references;
+- retrieve documented quantities and perform approved calculations;
+- identify when the indexed documents do not contain enough information to answer a question.
+
+## How It Works
 
 ```text
 PDF / Markdown / text
-          |
-   loader and chunker
-          |
-  local embeddings + FAISS
-          |
-       retriever
-          |
-  agent: RETRIEVE or USE_TOOL
-          |
- model adapter + grounding checks
-          |
- ANSWER with citations or ABSTAIN
+         |
+         v
+   Load and chunk
+         |
+         v
+  Embed and index
+         |
+         v
+ Retrieve evidence
+         |
+         v
+ Agent reasoning / tool use
+         |
+         v
+ Grounding and citation checks
+         |
+         v
+ Answer with citations
+       or abstain
 ```
 
-The agent uses one pass through retrieval and generation. Retrieved document text is marked as untrusted data in the model prompt. After generation, citation IDs are checked against retrieved evidence above the configured relevance threshold.
+### 1. Build the document index
 
-## Setup
+Documents are loaded and divided into chunks. Each chunk retains source information so retrieved evidence can later be traced back to its document and location.
 
-Python 3.11 or newer is required.
+The chunks are embedded and stored in a FAISS index for retrieval.
+
+### 2. Retrieve relevant evidence
+
+When a question arrives, AgentSouriva searches the index for the document chunks most relevant to that question.
+
+Retrieval can also be called independently when an application needs the evidence itself rather than a generated answer.
+
+### 3. Route the request
+
+The agent decides whether the request should use document retrieval or an approved tool.
+
+Document questions use retrieved evidence. Approved arithmetic is routed through a deterministic calculator rather than delegated to the language model.
+
+### 4. Generate a grounded answer
+
+For document questions, the model receives the question together with the retrieved evidence.
+
+Retrieved document text is treated as untrusted data in the prompt rather than as instructions for the agent.
+
+### 5. Validate the result
+
+Before returning the response, AgentSouriva checks that citation IDs in the generated answer correspond to evidence retrieved above the configured relevance threshold.
+
+The result is either a supported answer with citations or an abstention when the indexed evidence is insufficient.
+
+## Quick Start
+
+AgentSouriva requires Python 3.11 or newer.
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+
 pip install -r requirements.txt
+
 uvicorn app:app --reload
 ```
 
-`requirements.txt` installs the API, FAISS, PDF, MCP, and MLflow dependencies. For tests and evaluation tooling:
+The local API runs at:
 
-```bash
-pip install -r requirements-dev.txt
-pytest -q
-ruff check .
+```text
+http://localhost:8000
 ```
 
-Runtime settings use the `SOURIVA_` prefix. Common overrides include:
+Interactive API documentation is available at:
 
-```bash
-export SOURIVA_DATA_DIR=./artifacts
-export SOURIVA_CHUNK_SIZE=900
-export SOURIVA_CHUNK_OVERLAP=120
-export SOURIVA_RETRIEVAL_TOP_K=4
-export SOURIVA_MIN_RELEVANCE=0.18
+```text
+http://localhost:8000/docs
 ```
 
-The default feature-hashing embeddings are deterministic and favor lexical overlap. They require no downloaded weights. `HashEmbeddings` in `souriva/rag.py` is the replacement point for a learned embedding backend.
+## Add Documents
 
-## Ingest documents
-
-`POST /documents` accepts paths visible to the local API process. Each call replaces the active corpus and persists both the FAISS index and citation metadata under `SOURIVA_DATA_DIR`.
+AgentSouriva works over an active document corpus. The `/documents` endpoint loads the selected local files, builds the retrieval index, and persists the FAISS index and citation metadata.
 
 ```bash
 curl -s http://localhost:8000/documents \
@@ -74,9 +124,22 @@ curl -s http://localhost:8000/documents \
   -d '{"paths":["data/sample_docs/architecture.md","data/sample_docs/api.txt"]}'
 ```
 
-Supported suffixes are `.pdf`, `.md`, `.markdown`, and `.txt`. PDF locations use page numbers; other formats retain document and chunk locations.
+Each call replaces the active corpus.
 
-## Ask and retrieve
+Supported formats:
+
+```text
+.pdf
+.md
+.markdown
+.txt
+```
+
+For PDFs, citation locations use page numbers. Markdown and text sources retain document and chunk locations.
+
+## Ask Questions
+
+Once documents have been indexed, questions can be sent to `/ask`.
 
 ```bash
 curl -s http://localhost:8000/ask \
@@ -84,7 +147,7 @@ curl -s http://localhost:8000/ask \
   -d '{"question":"What vector index does AgentSouriva use?"}'
 ```
 
-A grounded response contains inline chunk references and structured citations:
+A grounded response includes both the answer and structured citation information:
 
 ```json
 {
@@ -103,7 +166,11 @@ A grounded response contains inline chunk references and structured citations:
 }
 ```
 
-Direct retrieval is available separately:
+The structured response exposes both the answer and the evidence trail to applications built on top of AgentSouriva.
+
+## Retrieve Evidence Directly
+
+Applications can access retrieval without requesting a generated answer:
 
 ```bash
 curl -s http://localhost:8000/retrieve \
@@ -111,7 +178,19 @@ curl -s http://localhost:8000/retrieve \
   -d '{"query":"citation policy","top_k":4}'
 ```
 
-Approved arithmetic takes an explicit route and does not call the model:
+This returns ranked document chunks together with their metadata and relevance scores.
+
+## Tool Use
+
+AgentSouriva keeps tool use explicit and restricted.
+
+The current tool set includes:
+
+- document search;
+- retrieval of a specific document chunk;
+- deterministic arithmetic.
+
+For example:
 
 ```bash
 curl -s http://localhost:8000/ask \
@@ -119,120 +198,258 @@ curl -s http://localhost:8000/ask \
   -d '{"question":"calculate: (40 * 3) / 2"}'
 ```
 
-## FastAPI endpoints
+Approved arithmetic follows a dedicated calculator route and does not require the language model.
 
-| Method | Path | Purpose |
+## Features
+
+### Local document retrieval
+
+Document chunks are indexed locally using FAISS.
+
+The default `HashEmbeddings` backend uses deterministic feature hashing and requires no downloaded embedding weights. It favors lexical overlap and provides a lightweight replacement point for learned embedding backends.
+
+### Grounded generation
+
+Retrieved document chunks are supplied as evidence for the model rather than treated as trusted instructions.
+
+Generated citation IDs are validated against the retrieved evidence before the answer is returned.
+
+### Abstention
+
+When the available evidence does not sufficiently support a document answer, the system can abstain rather than return an unsupported answer.
+
+### Constrained tools
+
+Agent actions are limited to explicitly approved tools. Retrieval and arithmetic remain separate from general model generation.
+
+### Local-first model boundary
+
+The default model and embedding backends can operate without a separately hosted model server.
+
+For larger local models, AgentSouriva exposes an OpenAI-compatible model boundary. GPT-OSS-20B can be connected through any compatible serving setup without coupling the retrieval and grounding layers to a particular inference engine.
+
+### Observable agent runs
+
+Optional MLflow integration can record questions, retrieved evidence, scores, answers, citations, tool use, action traces, latency, and relevant configuration.
+
+### Evaluation
+
+The repository includes direct evaluation for:
+
+- retrieval Recall@k source hits;
+- citation correctness;
+- unsupported-answer rate;
+- abstention accuracy;
+- tool-use accuracy;
+- mean latency.
+
+Optional RAGAS evaluation adds:
+
+- faithfulness;
+- answer relevance;
+- context precision;
+- context recall.
+
+## API Reference
+
+AgentSouriva exposes a small FastAPI interface:
+
+| Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/health` | Report process, index, and model-backend status. |
-| `POST` | `/documents` | Replace the corpus from local document paths. |
-| `POST` | `/retrieve` | Return ranked chunks with metadata and scores. |
-| `POST` | `/ask` | Return a grounded answer, citations, or abstention. |
+| `GET` | `/health` | Check application, index, and model-backend status |
+| `POST` | `/documents` | Load documents and replace the active corpus |
+| `POST` | `/retrieve` | Retrieve ranked document evidence |
+| `POST` | `/ask` | Ask a grounded question or invoke an approved action |
 
-Interactive OpenAPI documentation is available at `http://localhost:8000/docs` while the service runs.
+Interactive OpenAPI documentation is available at:
 
-## MCP tools
+```text
+http://localhost:8000/docs
+```
 
-Run the stdio MCP server with:
+## Configuration
+
+Runtime settings use the `SOURIVA_` prefix.
+
+Common settings include:
+
+```bash
+export SOURIVA_DATA_DIR=./artifacts
+export SOURIVA_CHUNK_SIZE=900
+export SOURIVA_CHUNK_OVERLAP=120
+export SOURIVA_RETRIEVAL_TOP_K=4
+export SOURIVA_MIN_RELEVANCE=0.18
+```
+
+## MCP
+
+AgentSouriva can expose its approved capabilities through the Model Context Protocol.
+
+Start the stdio MCP server with:
 
 ```bash
 python -m souriva.mcp_server
 ```
 
-It exposes only these approved tools:
+The MCP interface exposes:
 
-- `search_documents(query, top_k=4)` returns ranked evidence.
-- `get_document_chunk(chunk_id)` resolves a stable citation ID.
-- `calculate(expression)` evaluates numeric arithmetic through a restricted syntax tree.
+```text
+search_documents(query, top_k=4)
+get_document_chunk(chunk_id)
+calculate(expression)
+```
 
-The MCP server reads the same persisted index and environment configuration as the API. Protocol handling is isolated in `souriva/mcp_server.py`; retrieval and calculator behavior remain usable without MCP.
+The MCP server uses the same persisted retrieval index and configuration as the API. MCP is an interface to the existing capabilities rather than a separate retrieval implementation.
 
 ## GPT-OSS-20B
 
-Point the model adapter at an OpenAI-compatible GPT-OSS-20B endpoint:
+AgentSouriva can connect to GPT-OSS-20B through an OpenAI-compatible endpoint.
 
 ```bash
 export SOURIVA_MODEL_BACKEND=openai-compatible
 export SOURIVA_MODEL_BASE_URL=http://localhost:8001/v1
 export SOURIVA_MODEL_NAME=openai/gpt-oss-20b
 export SOURIVA_MODEL_API_KEY=local
+
 uvicorn app:app
 ```
 
-The server must implement `POST /v1/chat/completions`. The adapter sends the question and retrieved chunks, requests inline chunk IDs, and rejects responses containing citation IDs outside the retrieved allow-list. Application, retrieval, and grounding code do not depend on a specific serving engine.
+The configured server must provide:
 
-Without that server, leave `SOURIVA_MODEL_BACKEND=mock`. The mock returns deterministic extractive answers for local operation and tests.
+```text
+POST /v1/chat/completions
+```
 
-## MLflow
+The adapter sends the question and retrieved evidence to the model and requests inline chunk citations.
 
-Agent-run tracking is centralized and disabled by default. Enable it with:
+Application logic, retrieval, and grounding do not depend on a specific serving engine.
+
+Without an external model server, the default mock backend provides deterministic extractive responses for local operation and testing.
+
+## MLflow Tracking
+
+Agent-run tracking is optional and disabled by default.
 
 ```bash
 export SOURIVA_MLFLOW_ENABLED=true
 export SOURIVA_MLFLOW_TRACKING_URI=sqlite:///mlflow.db
 export SOURIVA_MLFLOW_EXPERIMENT=baseline-rag
+
 uvicorn app:app
 ```
 
-Each `/ask` run records the question, retrieved chunks and scores, answer, citations, action trace, tool use, latency, and relevant configuration. View local runs with:
+View recorded runs with:
 
 ```bash
 mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
 
+Each `/ask` run can record the question, retrieved chunks and scores, generated answer, citations, action trace, tool usage, latency, and relevant configuration.
+
 ## Evaluation
 
-The included four-case suite covers document retrieval, citations, abstention, and calculator routing:
-
-```bash
-python -m benchmarks.ragas_eval
-```
-
-This command reports measured retrieval Recall@k source hits, citation correctness, unsupported-answer rate, abstention accuracy, tool-use accuracy, and mean latency. It does not call an evaluator model.
-
-Install the evaluation dependencies and provide credentials for the evaluator used by RAGAS before requesting model-judged metrics:
+The included evaluation suite covers document retrieval, citation behavior, abstention, and calculator routing.
 
 ```bash
 pip install -r requirements-dev.txt
+python -m benchmarks.ragas_eval
+```
+
+The default evaluation reports directly measured metrics and does not require an evaluator model.
+
+For optional RAGAS model-judged metrics:
+
+```bash
 export OPENAI_API_KEY=...
 python -m benchmarks.ragas_eval --ragas
 ```
 
-The RAGAS run adds faithfulness, answer relevance, context precision, and context recall. Add `--mlflow` to either command to record its observed metrics and case-level artifact. No benchmark score is hard-coded into the repository.
+Add `--mlflow` to either command to record evaluation metrics and case-level artifacts.
 
-LM Evaluation Harness is not part of the runtime. It can be run independently against a future fine-tuned model when general-capability regression testing is needed.
+No benchmark score is hard-coded into the repository.
 
-## Optional model adaptation
+LM Evaluation Harness is not part of the runtime. It can be used independently in future model-evaluation workflows if general-capability regression testing is needed.
 
-Install the training dependencies separately:
+## Optional Model Adaptation
+
+AgentSouriva includes experimental entry points for adapting a model to the desired agent behavior.
+
+Install the training dependencies with:
 
 ```bash
 pip install -e '.[training]'
 ```
 
-Successful traces for supervised fine-tuning contain `question`, `retrieved_context`, `desired_action`, `grounded_answer`, and `citations`. An example is provided in `data/sft_example.jsonl`.
-
-```bash
-python -m training.sft data/sft_example.jsonl --model openai/gpt-oss-20b
-# Add --qlora to load the base model in 4-bit mode on supported systems.
-```
-
-`training/rl.py` defines a trainer-neutral preference record and an explicit reward signal. It favors supported answers, correct citations, correct tool use, and appropriate abstention, while penalizing unsupported claims, invented citations, and unnecessary tool calls. The weights are starting values to calibrate against collected preferences; the runtime does not depend on preference optimization.
-
-## Repository map
+Successful supervised traces contain:
 
 ```text
-app.py                    FastAPI transport
-souriva/agent.py          action routing and orchestration
-souriva/rag.py            loading, chunking, embeddings, FAISS, retrieval
-souriva/model.py          mock and GPT-OSS-compatible adapters
-souriva/alignment.py      citation validation and abstention
-souriva/tools.py          approved document tools and calculator
-souriva/mcp_server.py     MCP transport
-souriva/tracking.py       MLflow run and evaluation logging
-souriva/evaluation.py     direct quality metrics
-benchmarks/ragas_eval.py  evaluation CLI and RAGAS adapter
-training/                 optional LoRA and preference entry points
+question
+retrieved_context
+desired_action
+grounded_answer
+citations
+```
+
+An example is available in:
+
+```text
+data/sft_example.jsonl
+```
+
+Run supervised fine-tuning with:
+
+```bash
+python -m training.sft data/sft_example.jsonl \
+  --model openai/gpt-oss-20b
+```
+
+On supported systems, `--qlora` can be used to load the base model in 4-bit mode.
+
+The preference-training interface defines an explicit reward signal around supported answers, citation correctness, appropriate tool use, and abstention. Unsupported claims, invented citations, and unnecessary tool calls are penalized.
+
+These training components are optional. The core AgentSouriva runtime does not depend on model fine-tuning or preference optimization.
+
+## Repository Structure
+
+```text
+app.py                    FastAPI interface
+
+souriva/
+├── agent.py              action routing and orchestration
+├── rag.py                loading, chunking, embeddings, FAISS, retrieval
+├── model.py              model adapters
+├── alignment.py          citation validation and abstention
+├── tools.py              approved document tools and calculator
+├── mcp_server.py         MCP interface
+├── tracking.py           MLflow run and evaluation logging
+└── evaluation.py         direct quality metrics
+
+benchmarks/
+└── ragas_eval.py         evaluation CLI and RAGAS integration
+
+training/                 optional model adaptation
+
 docs/build-log/           per-change engineering reports
+```
+
+## Development
+
+Install development dependencies with:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Run the test suite:
+
+```bash
+pytest -q
+```
+
+Run linting:
+
+```bash
+ruff check .
 ```
 
 ## License
