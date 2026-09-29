@@ -93,22 +93,32 @@ The result is either a supported answer with citations or an abstention when the
 
 AgentSouriva requires Python 3.11 or newer.
 
+Create and activate a virtual environment so the project dependencies stay isolated from the rest of your Python installation:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+```
 
+Install the runtime dependencies:
+
+```bash
 pip install -r requirements.txt
+```
 
+Then start AgentSouriva as a local FastAPI service:
+
+```bash
 uvicorn app:app --reload
 ```
 
-The local API runs at:
+The API is now available at:
 
 ```text
 http://localhost:8000
 ```
 
-Interactive API documentation is available at:
+FastAPI also provides interactive API documentation at:
 
 ```text
 http://localhost:8000/docs
@@ -116,7 +126,11 @@ http://localhost:8000/docs
 
 ## Add Documents
 
-AgentSouriva works over an active document corpus. The `/documents` endpoint loads the selected local files, builds the retrieval index, and persists the FAISS index and citation metadata.
+Once AgentSouriva is running, send it the paths of the files you want it to index and search.
+
+The command below sends a POST request to `http://localhost:8000/documents`, the FastAPI endpoint used for loading documents. The JSON data lists the file paths to load: `architecture.md` and `api.txt`. AgentSouriva then builds the retrieval index and citation metadata for those files.
+
+Because the data is being sent as JSON, `content-type: application/json` tells FastAPI how to parse the request body.
 
 ```bash
 curl -s http://localhost:8000/documents \
@@ -124,7 +138,7 @@ curl -s http://localhost:8000/documents \
   -d '{"paths":["data/sample_docs/architecture.md","data/sample_docs/api.txt"]}'
 ```
 
-Each call replaces the active corpus.
+Loading another set of documents later replaces the previously indexed set.
 
 Supported formats:
 
@@ -139,7 +153,9 @@ For PDFs, citation locations use page numbers. Markdown and text sources retain 
 
 ## Ask Questions
 
-Once documents have been indexed, questions can be sent to `/ask`.
+Once documents have been indexed, send a question to `http://localhost:8000/ask`, the FastAPI endpoint that runs AgentSouriva's answer flow.
+
+The command below sends a JSON object containing the question. As with document loading, the `application/json` header tells FastAPI how to parse that request data:
 
 ```bash
 curl -s http://localhost:8000/ask \
@@ -170,7 +186,9 @@ The structured response exposes both the answer and the evidence trail to applic
 
 ## Retrieve Evidence Directly
 
-Applications can access retrieval without requesting a generated answer:
+If you want to inspect what AgentSouriva retrieves before any answer is generated, send a query directly to `http://localhost:8000/retrieve`.
+
+The example below sends the query as JSON and asks for the four highest-ranked chunks related to `citation policy`:
 
 ```bash
 curl -s http://localhost:8000/retrieve \
@@ -190,7 +208,7 @@ The current tool set includes:
 - retrieval of a specific document chunk;
 - deterministic arithmetic.
 
-For example:
+To see this routing in practice, send another JSON question through the same `/ask` endpoint, this time containing an arithmetic request:
 
 ```bash
 curl -s http://localhost:8000/ask \
@@ -198,7 +216,7 @@ curl -s http://localhost:8000/ask \
   -d '{"question":"calculate: (40 * 3) / 2"}'
 ```
 
-Approved arithmetic follows a dedicated calculator route and does not require the language model.
+AgentSouriva recognizes the request as approved arithmetic and routes it to the deterministic calculator instead of asking the language model to compute the result.
 
 ## Features
 
@@ -252,13 +270,13 @@ Optional RAGAS evaluation adds:
 
 ## API Reference
 
-AgentSouriva exposes a small FastAPI interface:
+AgentSouriva exposes a small FastAPI interface. `GET` is used to read status information, while the `POST` endpoints accept request data such as document paths, retrieval queries, or questions.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Check application, index, and model-backend status |
-| `POST` | `/documents` | Load documents and replace the active corpus |
-| `POST` | `/retrieve` | Retrieve ranked document evidence |
+| `POST` | `/documents` | Load a new set of documents for indexing |
+| `POST` | `/retrieve` | Retrieve ranked document evidence for a query |
 | `POST` | `/ask` | Ask a grounded question or invoke an approved action |
 
 Interactive OpenAPI documentation is available at:
@@ -271,7 +289,7 @@ http://localhost:8000/docs
 
 Runtime settings use the `SOURIVA_` prefix.
 
-Common settings include:
+Set these environment variables before starting AgentSouriva when you want to change where indexes are stored, how documents are chunked, how many results are retrieved, or the minimum relevance threshold:
 
 ```bash
 export SOURIVA_DATA_DIR=./artifacts
@@ -281,15 +299,19 @@ export SOURIVA_RETRIEVAL_TOP_K=4
 export SOURIVA_MIN_RELEVANCE=0.18
 ```
 
+Any values you set are read by the application when it starts.
+
 ## MCP
 
-AgentSouriva can expose its approved capabilities through the Model Context Protocol.
+AgentSouriva can expose its approved capabilities through the Model Context Protocol, allowing an MCP-compatible client to call its document and calculator tools.
 
 Start the stdio MCP server with:
 
 ```bash
 python -m souriva.mcp_server
 ```
+
+This launches AgentSouriva's MCP interface using the same persisted index and configuration as the main application.
 
 The MCP interface exposes:
 
@@ -303,7 +325,9 @@ The MCP server uses the same persisted retrieval index and configuration as the 
 
 ## GPT-OSS-20B
 
-AgentSouriva can connect to GPT-OSS-20B through an OpenAI-compatible endpoint.
+AgentSouriva can connect to GPT-OSS-20B through an OpenAI-compatible model server.
+
+The following settings tell AgentSouriva to use that backend, where the model server is running, which model name to request, and which API key value to send. After setting them, start AgentSouriva so it picks up the configuration:
 
 ```bash
 export SOURIVA_MODEL_BACKEND=openai-compatible
@@ -314,7 +338,7 @@ export SOURIVA_MODEL_API_KEY=local
 uvicorn app:app
 ```
 
-The configured server must provide:
+The configured model server must provide:
 
 ```text
 POST /v1/chat/completions
@@ -330,6 +354,8 @@ Without an external model server, the default mock backend provides deterministi
 
 Agent-run tracking is optional and disabled by default.
 
+To record AgentSouriva runs with MLflow, enable tracking, choose the local tracking database, and name the experiment before starting the application:
+
 ```bash
 export SOURIVA_MLFLOW_ENABLED=true
 export SOURIVA_MLFLOW_TRACKING_URI=sqlite:///mlflow.db
@@ -338,7 +364,7 @@ export SOURIVA_MLFLOW_EXPERIMENT=baseline-rag
 uvicorn app:app
 ```
 
-View recorded runs with:
+To inspect the recorded runs in MLflow's local web interface, start the UI against the same database:
 
 ```bash
 mlflow ui --backend-store-uri sqlite:///mlflow.db
@@ -350,6 +376,8 @@ Each `/ask` run can record the question, retrieved chunks and scores, generated 
 
 The included evaluation suite covers document retrieval, citation behavior, abstention, and calculator routing.
 
+Install the development and evaluation dependencies, then run the built-in evaluation suite:
+
 ```bash
 pip install -r requirements-dev.txt
 python -m benchmarks.ragas_eval
@@ -357,7 +385,7 @@ python -m benchmarks.ragas_eval
 
 The default evaluation reports directly measured metrics and does not require an evaluator model.
 
-For optional RAGAS model-judged metrics:
+To add RAGAS model-judged metrics, provide the evaluator credentials and run the same evaluation command with `--ragas`:
 
 ```bash
 export OPENAI_API_KEY=...
@@ -374,7 +402,7 @@ LM Evaluation Harness is not part of the runtime. It can be used independently i
 
 AgentSouriva includes experimental entry points for adapting a model to the desired agent behavior.
 
-Install the training dependencies with:
+Install the optional training dependencies separately from the core runtime:
 
 ```bash
 pip install -e '.[training]'
@@ -396,7 +424,7 @@ An example is available in:
 data/sft_example.jsonl
 ```
 
-Run supervised fine-tuning with:
+To start supervised fine-tuning from the example trace file, run the training module and specify the base model:
 
 ```bash
 python -m training.sft data/sft_example.jsonl \
@@ -434,19 +462,19 @@ docs/build-log/           per-change engineering reports
 
 ## Development
 
-Install development dependencies with:
+For repository development, install the additional test, linting, and evaluation dependencies:
 
 ```bash
 pip install -r requirements-dev.txt
 ```
 
-Run the test suite:
+Run the automated tests with:
 
 ```bash
 pytest -q
 ```
 
-Run linting:
+Check the codebase for linting issues with:
 
 ```bash
 ruff check .
