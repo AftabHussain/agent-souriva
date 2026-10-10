@@ -1,0 +1,26 @@
+% Migrated from legacy Markdown source: 0026-citation-parser.md (all source sections and text preserved)
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Commit 0026: Complete model citation validation}
+
+\subsection{Change}
+
+Changed model-response citation parsing to preserve every bracketed identifier for grounding validation.
+
+\subsection{Architecture}
+
+The model adapter extracts citation syntax, while the alignment module remains responsible for checking each identifier against eligible retrieved evidence.
+
+\subsection{Design notes}
+
+Previously the adapter discarded unknown IDs before alignment, so a response containing both a real and fabricated citation could retain the fabricated text while passing the structured check. Passing all emitted IDs forward makes the existing fail-closed policy complete.
+
+\subsection{Verification}
+
+Added a regression test for mixed known and unknown IDs. Ran the full test suite and lint after the change; results are recorded in the final documentation verification.
+
+\subsection{Result}
+
+Any bracketed citation outside the retrieved evidence allow-list now causes the response to abstain.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

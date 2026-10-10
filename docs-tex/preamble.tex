@@ -1,0 +1,33 @@
+% Academic paper-style format: single column, serif, black-on-white.
+% Compile with pdfLaTeX (Overleaf default).
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{needspace}
+\usepackage{upquote}
+\usepackage{xcolor}
+\usepackage{soul}
+\usepackage[hidelinks]{hyperref}
+
+% Needed by some Pandoc-generated compact lists.
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+% Reviewer notes. Only "Aftab:" is bold; the note body remains normal weight.
+% The very pale yellow is the only highlight/color in the document.
+\definecolor{aftabnoteyellow}{RGB}{255,248,200}
+\soulregister\textbf7
+\newcommand{\aftabnote}[1]{{%
+  \sethlcolor{aftabnoteyellow}%
+  \hl{\textbf{Aftab:} #1}%
+}}
+
+\setcounter{tocdepth}{1}
+\setlength{\parindent}{1.2em}
+\setlength{\parskip}{0pt}
+\setlength{\emergencystretch}{2em}

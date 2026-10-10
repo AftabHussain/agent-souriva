@@ -457,7 +457,7 @@ benchmarks/
 
 training/                 optional model adaptation
 
-docs/build-log/           per-change engineering reports
+docs-tex/build-logs/      per-change engineering reports (LaTeX)
 ```
 
 ## Development

@@ -1,0 +1,109 @@
+% Source: README.md: Features; Tool Use (technical semantics); Repository Structure
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Features and Components}
+
+\subsection{Local document retrieval}
+
+Document chunks are indexed locally using FAISS.
+
+The default \texttt{HashEmbeddings} backend uses deterministic feature hashing and requires no downloaded embedding weights. It favors lexical overlap and provides a lightweight replacement point for learned embedding backends.
+
+\subsection{Grounded generation}
+
+Retrieved document chunks are supplied as evidence for the model rather than treated as trusted instructions.
+
+Generated citation IDs are validated against the retrieved evidence before the answer is returned.
+
+\subsection{Abstention}
+
+When the available evidence does not sufficiently support a document answer, the system can abstain rather than return an unsupported answer.
+
+\subsection{Constrained tools}
+
+Agent actions are limited to explicitly approved tools. Retrieval and arithmetic remain separate from general model generation.
+
+\subsection{Local-first model boundary}
+
+The default model and embedding backends can operate without a separately hosted model server.
+
+For larger local models, AgentSouriva exposes an OpenAI-compatible model boundary. GPT-OSS-20B can be connected through any compatible serving setup without coupling the retrieval and grounding layers to a particular inference engine.
+
+\subsection{Observable agent runs}
+
+Optional MLflow integration can record questions, retrieved evidence, scores, answers, citations, tool use, action traces, latency, and relevant configuration.
+
+\subsection{Evaluation}
+
+The repository includes direct evaluation for:
+
+\begin{itemize}
+\tightlist
+\item
+  retrieval Recall@k source hits;
+\item
+  citation correctness;
+\item
+  unsupported-answer rate;
+\item
+  abstention accuracy;
+\item
+  tool-use accuracy;
+\item
+  mean latency.
+\end{itemize}
+
+Optional RAGAS evaluation adds:
+
+\begin{itemize}
+\tightlist
+\item
+  faithfulness;
+\item
+  answer relevance;
+\item
+  context precision;
+\item
+  context recall.
+\end{itemize}
+
+\subsection{Approved Tool Surface}
+
+AgentSouriva keeps tool use explicit and restricted. The current tool set includes:
+
+\begin{itemize}
+\tightlist
+\item
+  Document search;
+\item
+  Retrieval of a specific document chunk;
+\item
+  Deterministic arithmetic.
+\end{itemize}
+
+Approved arithmetic is routed to the deterministic calculator instead of relying on model-generated arithmetic.
+
+\subsection{Repository Structure}
+
+\begin{verbatim}
+app.py                    FastAPI interface
+
+souriva/
+|-- agent.py              action routing and orchestration
+|-- rag.py                loading, chunking, embeddings, FAISS, retrieval
+|-- model.py              model adapters
+|-- alignment.py          citation validation and abstention
+|-- tools.py              approved document tools and calculator
+|-- mcp_server.py         MCP interface
+|-- tracking.py           MLflow run and evaluation logging
+`-- evaluation.py         direct quality metrics
+
+benchmarks/
+`-- ragas_eval.py         evaluation CLI and RAGAS integration
+
+training/                 optional model adaptation
+
+docs-tex/build-logs/      per-change engineering reports (LaTeX)
+\end{verbatim}
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

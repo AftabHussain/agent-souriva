@@ -1,0 +1,26 @@
+% Migrated from legacy Markdown source: 0018-mlflow-tracking.md (all source sections and text preserved)
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Commit 0018: MLflow agent-run tracking}
+
+\subsection{Change}
+
+Added centralized, opt-in MLflow logging around question requests.
+
+\subsection{Architecture}
+
+Tracking receives the completed agent result rather than instrumenting retrieval, models, or alignment separately. This keeps experiment concerns out of core behavior while retaining the full trace.
+
+\subsection{Design notes}
+
+Each run records configuration, latency, abstention, evidence and scores, response, citations, actions, and tool use. Tracking defaults off so the core install remains light; enabling it without the dependency produces a direct installation message.
+
+\subsection{Verification}
+
+Compiled the code, checked the diff, and added a test confirming disabled tracking has no side effects or MLflow import requirement.
+
+\subsection{Result}
+
+Setting \texttt{SOURIVA\_MLFLOW\_ENABLED=true} records query traces in the configured \texttt{baseline-rag} experiment.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

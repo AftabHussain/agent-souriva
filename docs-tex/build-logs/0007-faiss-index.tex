@@ -1,0 +1,26 @@
+% Migrated from legacy Markdown source: 0007-faiss-index.md (all source sections and text preserved)
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Commit 0007: Persistent FAISS index}
+
+\subsection{Change}
+
+Added exact inner-product indexing, metadata persistence, index restoration, and chunk lookup.
+
+\subsection{Architecture}
+
+\texttt{FaissStore} owns the vector index and its ordered chunk sidecar. The sidecar retains citation fields that FAISS itself does not store.
+
+\subsection{Design notes}
+
+Re-ingestion atomically replaces the logical corpus for predictable local behavior. Load validates both vector dimensions and row counts, preventing silent mismatches between the binary index and JSON metadata.
+
+\subsection{Verification}
+
+Compiled source and tests and checked the diff. Added persistence, lookup, and missing-index test cases. Runtime execution requires the declared NumPy and FAISS dependencies.
+
+\subsection{Result}
+
+Chunk vectors and citation metadata can now be saved locally and restored across process restarts.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

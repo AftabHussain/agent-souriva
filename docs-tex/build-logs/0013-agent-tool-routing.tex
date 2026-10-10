@@ -1,0 +1,26 @@
+% Migrated from legacy Markdown source: 0013-agent-tool-routing.md (all source sections and text preserved)
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Commit 0013: Agent calculator routing}
+
+\subsection{Change}
+
+Added an explicit calculator route to the document agent and completed behavior for all four agent actions.
+
+\subsection{Architecture}
+
+Questions prefixed with \texttt{calculate:} take a bounded tool path. The calculator is injected as a callable, keeping the agent unaware of MCP transport and limiting tool access to an approved function.
+
+\subsection{Design notes}
+
+Tool requests do not enter retrieval or the model. Expected parsing and arithmetic failures become a standardized abstention, while successful calculations are returned with a \texttt{USE\_TOOL}, \texttt{ANSWER} trace and no document citations.
+
+\subsection{Verification}
+
+Compiled source and tests, checked the diff, and added cases for successful and rejected calculator requests.
+
+\subsection{Result}
+
+The agent now executes retrieval, approved tool use, answers, and abstentions through short deterministic paths.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

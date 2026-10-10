@@ -1,0 +1,88 @@
+% Source: README.md: API Reference; Add Documents; Ask Questions; Retrieve Evidence Directly; Tool Use; MCP (technical details and schemas, not user command tutorials)
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{API and MCP Interfaces}
+
+AgentSouriva exposes a small FastAPI interface. \texttt{GET} is used to read status information, while the \texttt{POST} endpoints accept request data such as document paths, retrieval queries, or questions.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Method & Endpoint & Purpose \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{GET} & \texttt{/health} & Check application, index, and model-backend status \\
+\texttt{POST} & \texttt{/documents} & Load a new set of documents for indexing \\
+\texttt{POST} & \texttt{/retrieve} & Retrieve ranked document evidence for a query \\
+\texttt{POST} & \texttt{/ask} & Ask a grounded question or invoke an approved action \\
+\end{longtable}
+
+\subsection{Document Ingestion Interface}
+
+The \texttt{/documents} endpoint accepts a JSON object containing file paths. It builds the index and source-aware citation metadata for those files. A later ingestion replaces the active corpus. Request bodies are transmitted as \texttt{application/json}.
+
+A representative request-body structure from the project documentation is:
+
+\begin{verbatim}
+{"paths": ["data/sample_docs/architecture.md", "data/sample_docs/api.txt"]}
+\end{verbatim}
+
+\subsection{Grounded Question Interface}
+
+The \texttt{/ask} endpoint accepts a JSON question, initiates the answer flow, and returns the answer together with structured citation information, an abstention indicator, a reason, and an action trace.
+
+The request-body structure is:
+
+\begin{verbatim}
+{"question": "What vector index does AgentSouriva use?"}
+\end{verbatim}
+
+A grounded response includes both the answer and structured citation information:
+
+\begin{verbatim}
+{
+  "answer": "AgentSouriva loads local documents ... FAISS index. [chunk-...]",
+  "citations": [
+    {
+      "id": "chunk-...",
+      "source": "architecture.md",
+      "location": "document, chunk 1",
+      "score": 0.4
+    }
+  ],
+  "abstained": false,
+  "reason": null,
+  "actions": ["RETRIEVE", "ANSWER"]
+}
+\end{verbatim}
+
+The structured response exposes both the answer and the evidence trail to applications built on top of AgentSouriva.
+
+\subsection{Direct Retrieval Interface}
+
+The \texttt{/retrieve} endpoint returns ranked document chunks along with source metadata and relevance scores, without first generating an answer. Its JSON request includes a query and an optional retrieval limit, as illustrated by the source request-body structure:
+
+\begin{verbatim}
+{"query": "citation policy", "top_k": 4}
+\end{verbatim}
+
+\subsection{Approved Tool Routing}
+
+The \texttt{/ask} endpoint can route approved arithmetic requests to the deterministic calculator rather than delegate calculation to the language model. The approved tool surface consists of document search, chunk retrieval, and deterministic arithmetic.
+
+\subsection{Model Context Protocol (MCP)}
+
+AgentSouriva can expose its approved capabilities through the Model Context Protocol, allowing an MCP-compatible client to call its document and calculator tools.
+
+The stdio MCP interface exposes the following tool signatures:
+
+\begin{verbatim}
+search_documents(query, top_k=4)
+get_document_chunk(chunk_id)
+calculate(expression)
+\end{verbatim}
+
+The MCP interface uses the same persisted retrieval index and runtime configuration as the main API. It is an interface to the existing capabilities, not a separate retrieval implementation.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

@@ -1,0 +1,92 @@
+% Source: README.md: Evaluation; MLflow Tracking; Optional Model Adaptation; Features (evaluation and observability)
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Evaluation, Tracking, and Model Adaptation}
+
+\subsection{Direct Evaluation}
+
+The included evaluation suite covers document retrieval, citation behavior, abstention, and calculator routing. The default evaluation reports directly observed metrics without requiring an evaluator model.
+
+The direct evaluation metrics are:
+
+\begin{itemize}
+\tightlist
+\item
+  Retrieval Recall@k source hits;
+\item
+  Citation correctness;
+\item
+  Unsupported-answer rate;
+\item
+  Abstention accuracy;
+\item
+  Tool-use accuracy;
+\item
+  Mean latency.
+\end{itemize}
+
+No benchmark score is hard-coded into the repository.
+
+\subsection{Optional RAGAS Evaluation}
+
+Optional RAGAS model-judged evaluation adds:
+
+\begin{itemize}
+\tightlist
+\item
+  Faithfulness;
+\item
+  Answer relevance;
+\item
+  Context precision;
+\item
+  Context recall.
+\end{itemize}
+
+RAGAS scoring requires evaluator model credentials and remains distinct from the directly observed metrics. LM Evaluation Harness is not part of the runtime but can be used independently for future general-capability regression testing.
+
+\subsection{MLflow Tracking}
+
+Agent-run tracking is optional and disabled by default. Each \texttt{/ask} run can record the question, retrieved chunks and scores, generated answer, citations, action trace, tool usage, latency, and relevant configuration.
+
+Evaluation metrics and case-level artifacts can also be recorded for comparison across runs.
+
+The tracking configuration variables and example values provided in the source README are:
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}[]{@{}p{2.25in}p{1.55in}p{2.30in}@{}}
+\toprule\noalign{}
+Setting & Source README example & Role \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{SOURIVA\_MLFLOW\_ENABLED} & \texttt{true} & Enables optional agent-run tracking \\
+\texttt{SOURIVA\_MLFLOW\_TRACKING\_URI} & \texttt{sqlite:///mlflow.db} & SQLite tracking database URI \\
+\texttt{SOURIVA\_MLFLOW\_EXPERIMENT} & \texttt{baseline-rag} & Experiment identifier \\
+\end{longtable}
+\endgroup
+
+\subsection{Optional Model Adaptation}
+
+AgentSouriva includes experimental entry points for adapting a model to the desired agent behavior. These training components are separate from the core runtime and are not required for document retrieval and grounded answering.
+
+Successful supervised traces contain the following fields:
+
+\begin{verbatim}
+question
+retrieved_context
+desired_action
+grounded_answer
+citations
+\end{verbatim}
+
+A validated example trace is located at \texttt{data/sft\_example.jsonl}. Supervised fine-tuning is based on these successful traces. The LoRA approach can be extended to QLoRA, in which supported systems load the base model in 4-bit mode.
+
+The preference-training interface defines an explicit reward signal around supported answers, citation correctness, appropriate tool use, and abstention. Unsupported claims, invented citations, and unnecessary tool calls are penalized.
+
+Training and preference optimization remain optional, distinct from the core runtime.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

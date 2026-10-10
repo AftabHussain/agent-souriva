@@ -1,0 +1,62 @@
+% Source: README.md: introduction, Why AgentSouriva?, Example Uses, License
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Project Overview}
+
+AgentSouriva is a local, evidence-grounded agent for reasoning over PDF, Markdown, and text collections.
+
+It is built around a simple question: \textbf{how can an AI agent answer from documents while keeping its evidence, tool use, and uncertainty visible?}
+
+Given a collection of documents, AgentSouriva indexes their contents, retrieves relevant evidence for each question, and returns source-aware answers. It can validate citations against retrieved evidence, route approved tasks through dedicated tools, and abstain when the available documents do not sufficiently support an answer.
+
+The project is designed as a compact environment for exploring \textbf{trustworthy document-grounded agents}, including retrieval, constrained tool use, citation validation, abstention, evaluation, and optional model adaptation.
+
+\subsection{Why AgentSouriva?}
+
+Retrieval-augmented systems can make language models useful over private or specialized documents, but retrieval alone does not guarantee that an answer is supported by the retrieved evidence.
+
+AgentSouriva makes the important parts of this process explicit:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Evidence retrieval}: answers are grounded in chunks retrieved from the indexed corpus.
+\item
+  \textbf{Source-aware citations}: responses retain references to the evidence used.
+\item
+  \textbf{Citation validation}: citation IDs are checked against the evidence actually retrieved.
+\item
+  \textbf{Controlled tool use}: the agent operates through a small set of approved tools.
+\item
+  \textbf{Abstention}: unsupported document questions can return an abstention rather than an unsupported answer.
+\item
+  \textbf{Evaluation}: retrieval, citation behavior, abstention, tool use, unsupported answers, and latency can be measured directly.
+\end{itemize}
+
+This makes AgentSouriva useful both as a local document assistant and as an experimental platform for studying grounded agent behavior.
+
+\subsection{Example Uses}
+
+AgentSouriva can be used to:
+
+\begin{itemize}
+\tightlist
+\item
+  compare methods, datasets, metrics, and reported results across papers;
+\item
+  answer questions from technical manuals and architecture documentation;
+\item
+  extract authentication, endpoint, and usage details from API documentation;
+\item
+  compare specifications across documents with source references;
+\item
+  retrieve documented quantities and perform approved calculations;
+\item
+  identify when the indexed documents do not contain enough information to answer a question.
+\end{itemize}
+
+\subsection{License}
+
+AgentSouriva is available under the MIT License.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

@@ -1,0 +1,26 @@
+% Migrated from legacy Markdown source: 0006-local-embeddings.md (all source sections and text preserved)
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Commit 0006: Local embedding backend}
+
+\subsection{Change}
+
+Added deterministic normalized feature-hashing embeddings.
+
+\subsection{Architecture}
+
+This backend supplies vectors to the FAISS index while keeping initial operation independent of network access and model downloads.
+
+\subsection{Design notes}
+
+Token hashes select dimensions and signs, then vectors are L2-normalized for inner-product similarity. This baseline favors lexical overlap; the narrow \texttt{embed} interface can later be implemented by a learned embedding model without changing index behavior.
+
+\subsection{Verification}
+
+Compiled source and tests and checked the diff. Unit cases cover determinism, shape, normalization, relative similarity, and empty batches.
+
+\subsection{Result}
+
+AgentSouriva can produce repeatable local vectors suitable for FAISS cosine-style search.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

@@ -1,0 +1,26 @@
+% Migrated from legacy Markdown source: 0020-ragas-evaluation.md (all source sections and text preserved)
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Commit 0020: RAGAS evaluation runner}
+
+\subsection{Change}
+
+Added a four-case evaluation dataset, two source documents, a direct evaluation CLI, and optional RAGAS execution for faithfulness, answer relevance, context precision, and context recall.
+
+\subsection{Architecture}
+
+The runner builds an isolated evaluation index, exercises the real runtime, then transforms observed answers and contexts into the RAGAS dataset schema. Model-judged metrics run only with \texttt{-\/-ragas}.
+
+\subsection{Design notes}
+
+RAGAS is pinned to the 0.2 API line used by the runner. The default command reports only locally measured direct metrics; RAGAS requires its evaluator model credentials and never substitutes invented scores.
+
+\subsection{Verification}
+
+Compiled the runner and checked the diff. Full execution is deferred until the declared FAISS and NumPy dependencies are installed.
+
+\subsection{Result}
+
+\texttt{python\ -m\ benchmarks.ragas\_eval} runs the reproducible local suite, while \texttt{-\/-ragas} adds the four requested evaluator-model metrics.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

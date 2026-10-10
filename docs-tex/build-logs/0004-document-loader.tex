@@ -1,0 +1,26 @@
+% Migrated from legacy Markdown source: 0004-document-loader.md (all source sections and text preserved)
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Commit 0004: Document loader}
+
+\subsection{Change}
+
+Added source-aware loading for PDF, Markdown, and UTF-8 text documents.
+
+\subsection{Architecture}
+
+The loader is the first RAG pipeline stage. It normalizes files into \texttt{DocumentPart} values while preserving filenames and page locations for downstream citations.
+
+\subsection{Design notes}
+
+PDF extraction uses one part per non-empty page. Text formats remain one part at this stage so chunking stays independent of file I/O. Unsupported extensions fail explicitly instead of being guessed.
+
+\subsection{Verification}
+
+Compiled the package and tests, checked the diff, and added unit coverage for text, Markdown, and unsupported types. PDF extraction is exercised when the optional fixture is available in later integration testing.
+
+\subsection{Result}
+
+AgentSouriva can normalize all three required document formats into a common metadata-preserving representation.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}

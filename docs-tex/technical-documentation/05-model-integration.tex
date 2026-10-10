@@ -1,0 +1,48 @@
+% Source: README.md: GPT-OSS-20B; Configuration; Quick Start (Python requirement only); Features (local-first model boundary)
+% Converted to plain LaTeX for the AgentSouriva development reference.
+
+\section{Models and Runtime Configuration}
+
+\subsection{Local and External Model Boundaries}
+
+The default model and embedding backends can operate without a separately hosted model server. For larger local models, AgentSouriva exposes an OpenAI-compatible model boundary. GPT-OSS-20B can be connected through any compatible serving setup without coupling the retrieval and grounding layers to a particular inference engine.
+
+\subsection{GPT-OSS-20B}
+
+AgentSouriva can connect to GPT-OSS-20B through an OpenAI-compatible model server. The configured model server must implement \texttt{POST\ /v1/chat/completions}.
+
+The adapter sends the question and retrieved evidence to the model and requests inline chunk citations. Application logic, retrieval, and grounding do not depend on a specific serving engine.
+
+Without an external model server, the default mock backend provides deterministic extractive responses for local operation and testing.
+
+\subsection{Runtime Settings and Configuration Interface}
+
+Runtime settings use the \texttt{SOURIVA\_} prefix. The application reads configuration during startup. The following values are shown as configuration examples in the source README, not asserted as deployment defaults.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}[]{@{}p{2.25in}p{1.55in}p{2.30in}@{}}
+\toprule\noalign{}
+Setting & Source README example & Role \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{SOURIVA\_DATA\_DIR} & \texttt{./artifacts} & Persisted index and runtime artifacts \\
+\texttt{SOURIVA\_CHUNK\_SIZE} & \texttt{900} & Chunk-size setting \\
+\texttt{SOURIVA\_CHUNK\_OVERLAP} & \texttt{120} & Overlap between text chunks \\
+\texttt{SOURIVA\_RETRIEVAL\_TOP\_K} & \texttt{4} & Number of retrieved chunks \\
+\texttt{SOURIVA\_MIN\_RELEVANCE} & \texttt{0.18} & Minimum evidence-relevance threshold \\
+\texttt{SOURIVA\_MODEL\_BACKEND} & \texttt{openai-compatible} & Model-backend selector \\
+\texttt{SOURIVA\_MODEL\_BASE\_URL} & \texttt{http://localhost:}\newline\texttt{8001/v1} & Model server API base URL \\
+\texttt{SOURIVA\_MODEL\_NAME} & \texttt{openai/gpt-oss-20b} & Model identifier \\
+\texttt{SOURIVA\_MODEL\_API\_KEY} & \texttt{local} & API key supplied to the model endpoint \\
+\end{longtable}
+\endgroup
+
+\subsection{Runtime Environment}
+
+The source README specifies Python 3.11 or newer. Runtime, evaluation, tracking, MCP, and training capabilities have distinct dependency requirements, as detailed in the chronological build logs.
+
+% Optional reviewer note: \aftabnote{Write a review note here.}
