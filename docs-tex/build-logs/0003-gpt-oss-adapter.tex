@@ -1,25 +1,27 @@
 % Migrated from legacy Markdown source: 0003-gpt-oss-adapter.md (all source sections and text preserved)
 % Converted to plain LaTeX for the AgentSouriva development reference.
 
-\section{Commit 0003: GPT-OSS-compatible model adapter}
+\subsection{GPT-OSS-compatible model adapter}
 
-\subsection{Change}
+\commitlink{d26e8364efbe4d0a2cf02d8dc6e193e386948c34}{d26e836}
+
+\subsubsection{Change}
 
 Added a small OpenAI-compatible HTTP adapter and backend selector.
 
-\subsection{Architecture}
+\subsubsection{Architecture}
 
 GPT-OSS-20B serving is isolated behind the same \texttt{ModelAdapter} boundary as the mock. The adapter sends retrieved context to a chat-completions endpoint and returns a normalized reply.
 
-\subsection{Design notes}
+\subsubsection{Design notes}
 
 The prompt marks retrieved text as untrusted data and requires evidence-only answers. Returned citation identifiers are intersected with retrieved chunk IDs so fabricated citations cannot enter the application response. A standard-library HTTP client avoids another core dependency.
 
-\subsection{Verification}
+\subsubsection{Verification}
 
 Ran module compilation and checked the diff. Factory unit tests cover both configured backends and invalid configuration; full test execution awaits development dependency installation.
 
-\subsection{Result}
+\subsubsection{Result}
 
 A local GPT-OSS-20B server can later replace the mock through configuration without changes to agent logic.
 

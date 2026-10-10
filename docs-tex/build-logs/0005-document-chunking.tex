@@ -1,25 +1,27 @@
 % Migrated from legacy Markdown source: 0005-document-chunking.md (all source sections and text preserved)
 % Converted to plain LaTeX for the AgentSouriva development reference.
 
-\section{Commit 0005: Metadata-preserving document chunking}
+\subsection{Metadata-preserving document chunking}
 
-\subsection{Change}
+\commitlink{98e802b70d1c6312619060c4188592c818d4d1ef}{98e802b}
+
+\subsubsection{Change}
 
 Added bounded, overlapping text chunking with stable content-derived identifiers.
 
-\subsection{Architecture}
+\subsubsection{Architecture}
 
 Chunking converts loaded document parts into the retrieval unit used by embeddings, FAISS, citations, and chunk lookup.
 
-\subsection{Design notes}
+\subsubsection{Design notes}
 
 Chunks prefer whitespace boundaries and retain controlled overlap to preserve context across edges. IDs are stable hashes of source, location, and text, making citations reproducible across equivalent ingestions without a global counter.
 
-\subsection{Verification}
+\subsubsection{Verification}
 
 Compiled the modules, checked the diff, and added cases for overlap, metadata, stable IDs, and invalid sizing.
 
-\subsection{Result}
+\subsubsection{Result}
 
 Loaded documents can now be split into deterministic, citation-ready chunks.
 

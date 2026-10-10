@@ -1,25 +1,27 @@
 % Migrated from legacy Markdown source: 0016-retrieval-api.md (all source sections and text preserved)
 % Converted to plain LaTeX for the AgentSouriva development reference.
 
-\section{Commit 0016: Retrieval API}
+\subsection{Retrieval API}
 
-\subsection{Change}
+\commitlink{3bf0fefbf7db3f692740a7512b8f1762862624c2}{3bf0fef}
+
+\subsubsection{Change}
 
 Added typed evidence schemas and \texttt{POST\ /retrieve} for direct corpus search.
 
-\subsection{Architecture}
+\subsubsection{Architecture}
 
 The endpoint exposes the same configured FAISS retriever used by the agent and MCP tools. Results preserve the stable chunk ID, text, source, location, and measured similarity score.
 
-\subsection{Design notes}
+\subsubsection{Design notes}
 
 Query length and result count are bounded by request validation. The global relevance threshold is applied consistently so direct retrieval and agent decisions observe the same evidence floor.
 
-\subsection{Verification}
+\subsubsection{Verification}
 
 Compiled source and tests, checked the diff, and extended the ingestion integration test to restore and query the persisted corpus. Added request validation coverage for invalid \texttt{top\_k}.
 
-\subsection{Result}
+\subsubsection{Result}
 
 Clients can inspect ranked evidence independently of answer generation.
 

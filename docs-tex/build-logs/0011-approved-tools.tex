@@ -1,25 +1,27 @@
 % Migrated from legacy Markdown source: 0011-approved-tools.md (all source sections and text preserved)
 % Converted to plain LaTeX for the AgentSouriva development reference.
 
-\section{Commit 0011: Restricted calculator}
+\subsection{Restricted calculator}
 
-\subsection{Change}
+\commitlink{1d88d7a16180169c295765bfb55cfe14bcf7ba26}{1d88d7a}
+
+\subsubsection{Change}
 
 Added a restricted arithmetic calculator for approved tool execution.
 
-\subsection{Architecture}
+\subsubsection{Architecture}
 
 The calculator is transport-independent so the agent and MCP server can share identical behavior.
 
-\subsection{Design notes}
+\subsubsection{Design notes}
 
 The calculator walks a small arithmetic AST and rejects names, calls, attributes, oversized exponents, and extreme results.
 
-\subsection{Verification}
+\subsubsection{Verification}
 
 Compiled source and tests and checked the diff. Cases cover normal arithmetic and attempted code execution.
 
-\subsection{Result}
+\subsubsection{Result}
 
 Approved arithmetic has a small, testable implementation ready for agent and MCP exposure.
 

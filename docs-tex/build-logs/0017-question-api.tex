@@ -1,25 +1,27 @@
 % Migrated from legacy Markdown source: 0017-question-api.md (all source sections and text preserved)
 % Converted to plain LaTeX for the AgentSouriva development reference.
 
-\section{Commit 0017: Grounded question API}
+\subsection{Grounded question API}
 
-\subsection{Change}
+\commitlink{de904b3984171b8148748f000a6a07fd457a0642}{de904b3}
+
+\subsubsection{Change}
 
 Added \texttt{POST\ /ask} with typed answers, citations, abstention details, and action traces.
 
-\subsection{Architecture}
+\subsubsection{Architecture}
 
 The endpoint delegates to the shared \texttt{DocumentAgent}, exposing alignment results without duplicating retrieval or grounding decisions in HTTP code.
 
-\subsection{Design notes}
+\subsubsection{Design notes}
 
 Responses keep citations structured for clients while the answer text also retains inline chunk references. Abstentions use HTTP 200 because they are successful, policy-compliant outcomes rather than transport failures.
 
-\subsection{Verification}
+\subsubsection{Verification}
 
 Compiled the project, checked the diff, and extended API integration coverage for a cited document answer and an empty-corpus abstention.
 
-\subsection{Result}
+\subsubsection{Result}
 
 The complete ingest, retrieve, and grounded-answer flow is available through FastAPI.
 

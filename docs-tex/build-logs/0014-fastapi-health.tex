@@ -1,25 +1,27 @@
 % Migrated from legacy Markdown source: 0014-fastapi-health.md (all source sections and text preserved)
 % Converted to plain LaTeX for the AgentSouriva development reference.
 
-\section{Commit 0014: FastAPI runtime and health endpoint}
+\subsection{FastAPI runtime and health endpoint}
 
-\subsection{Change}
+\commitlink{b12701ecdd6f114484eb3f5548f2acaef2cead9f}{b12701e}
+
+\subsubsection{Change}
 
 Added centralized runtime construction and a FastAPI application with a health endpoint.
 
-\subsection{Architecture}
+\subsubsection{Architecture}
 
 The runtime wires configuration, embeddings, persisted FAISS state, tools, model adapter, and agent in one place. The API imports that composition root rather than constructing components per request.
 
-\subsection{Design notes}
+\subsubsection{Design notes}
 
 Startup restores an existing local index when present. Health reports readiness-relevant state without making model calls or exposing paths and credentials.
 
-\subsection{Verification}
+\subsubsection{Verification}
 
 Compiled all modules, checked the diff, and added an isolated API test for an empty temporary data directory.
 
-\subsection{Result}
+\subsubsection{Result}
 
 \texttt{uvicorn\ app:app} can expose process health and confirm the selected backend and indexed chunk count.
 

@@ -1,25 +1,27 @@
 % Migrated from legacy Markdown source: 0012-mcp-server.md (all source sections and text preserved)
 % Converted to plain LaTeX for the AgentSouriva development reference.
 
-\section{Commit 0012: MCP document and calculator tools}
+\subsection{MCP document and calculator tools}
 
-\subsection{Change}
+\commitlink{7c1be2f9c20ca31436da38eb1ef2856269ea772b}{7c1be2f}
+
+\subsubsection{Change}
 
 Added the approved document tool surface and exposed document search, chunk lookup, and arithmetic through a FastMCP server.
 
-\subsection{Architecture}
+\subsubsection{Architecture}
 
 \texttt{DocumentTools} contains transport-independent behavior. \texttt{mcp\_server} only constructs the configured store and maps approved methods to MCP, keeping protocol concerns out of retrieval and agent modules.
 
-\subsection{Design notes}
+\subsubsection{Design notes}
 
 The server restores the same persisted index used by the API. Search result counts are bounded to protect local resources, and no generic function dispatcher is exposed, so clients can invoke only the three registered tools.
 
-\subsection{Verification}
+\subsubsection{Verification}
 
 Compiled all modules and checked the diff. Core tests cover search serialization, chunk lookup, missing IDs, arithmetic, and rejection of executable syntax.
 
-\subsection{Result}
+\subsubsection{Result}
 
 MCP clients can search the local corpus, inspect cited chunks, and perform controlled calculations over stdio.
 

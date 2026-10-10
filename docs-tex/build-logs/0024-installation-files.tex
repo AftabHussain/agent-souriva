@@ -1,25 +1,27 @@
 % Migrated from legacy Markdown source: 0024-installation-files.md (all source sections and text preserved)
 % Converted to plain LaTeX for the AgentSouriva development reference.
 
-\section{Commit 0024: Installation entry points}
+\subsection{Installation entry points}
 
-\subsection{Change}
+\commitlink{9cd644bc35834cc64cd953d42cbd43249239a240}{9cd644b}
+
+\subsubsection{Change}
 
 Added pip requirements entry points for runtime and development/evaluation environments and allowed newer Python versions when dependency wheels are available.
 
-\subsection{Architecture}
+\subsubsection{Architecture}
 
 Core package metadata remains the dependency source of truth. Requirements files select the relevant optional groups rather than duplicating version constraints.
 
-\subsection{Design notes}
+\subsubsection{Design notes}
 
 The standard requirements include MCP and MLflow functionality. Development requirements additionally include tests and RAGAS evaluation; accelerator-heavy training dependencies remain an explicit separate extra.
 
-\subsection{Verification}
+\subsubsection{Verification}
 
 Checked the configuration diff and created a local virtual environment. Dependency installation and the complete suite are the next verification step.
 
-\subsection{Result}
+\subsubsection{Result}
 
 Users have direct installation commands for the working service and for repository development.
 
