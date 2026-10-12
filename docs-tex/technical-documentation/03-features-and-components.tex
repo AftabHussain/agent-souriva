@@ -85,6 +85,16 @@ Approved arithmetic is routed to the deterministic calculator instead of relying
 
 \subsection{Repository Structure}
 
+AgentSouriva distinguishes between the overall software project
+(\texttt{agent-souriva/}) and its importable Python package
+(\texttt{souriva/}). The project root contains the application
+package, tests, benchmarks, training utilities, documentation,
+datasets, and generated artifacts. The application package itself (\texttt{souriva/}) contains the core Python implementation, including application logic, runtime configuration, document processing, retrieval, model integration, and supporting components required for the agent's operation. In other words, the project root organizes the complete software
+repository, whereas \texttt{souriva/} encapsulates the importable
+application implementation.
+
+
+
 \begin{verbatim}
 app.py                    FastAPI interface
 
