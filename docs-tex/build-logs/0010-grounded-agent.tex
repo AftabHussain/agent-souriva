@@ -9,6 +9,23 @@
 
 Added the single-pass document agent and explicit action trace.
 
+The coordinating method takes one retrieval-to-grounding path and records its outcome:
+
+\begin{verbatim}
+evidence = self.retriever.search(
+    question, self.top_k, self.min_relevance
+)
+if not evidence:
+    answer = GroundedAnswer(ABSTENTION, (), True,
+                            "no_relevant_evidence")
+    return AgentResult(answer, (),
+                       (Action.RETRIEVE, Action.ABSTAIN))
+reply = self.model.answer(question, evidence)
+answer = ground_reply(reply, evidence, self.min_relevance)
+\end{verbatim}
+
+The early return avoids generation when retrieval fails; otherwise the model reply must pass the grounding policy before becoming an agent result.
+
 \subsubsection{Architecture}
 
 The agent coordinates retrieval, model generation, and alignment without owning their implementation. Its trace uses the four conceptual actions \texttt{RETRIEVE}, \texttt{USE\_TOOL}, \texttt{ANSWER}, and \texttt{ABSTAIN}.

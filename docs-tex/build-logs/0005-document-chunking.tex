@@ -9,6 +9,19 @@
 
 Added bounded, overlapping text chunking with stable content-derived identifiers.
 
+Each emitted chunk receives location metadata and a deterministic digest:
+
+\begin{verbatim}
+location = f"{part.location}, chunk {number}"
+digest = hashlib.sha256(
+    f"{part.source}:{location}:{text}".encode()
+).hexdigest()[:12]
+chunks.append(Chunk(id=f"chunk-{digest}", text=text,
+                    source=part.source, location=location))
+\end{verbatim}
+
+Hashing the source, location, and normalized text makes the identifier repeatable for equivalent content while the overlap loop preserves context between neighboring chunks.
+
 \subsubsection{Architecture}
 
 Chunking converts loaded document parts into the retrieval unit used by embeddings, FAISS, citations, and chunk lookup.

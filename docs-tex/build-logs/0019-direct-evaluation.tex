@@ -9,6 +9,25 @@
 
 Added a compact evaluation runner for retrieval, citation, unsupported-answer, abstention, tool-use, and latency metrics.
 
+Each observed run is reduced to directly measurable Boolean outcomes before aggregation:
+
+\begin{verbatim}
+retrieval_hit = not case.expected_sources or bool(
+    set(case.expected_sources) & retrieved_sources
+)
+rows.append({
+    "retrieval_hit": retrieval_hit,
+    "citation_correct": cited_ids <= retrieved_ids,
+    "unsupported_answer":
+        not result.answer.abstained and not cited_ids,
+    "abstention_correct":
+        result.answer.abstained is not case.answerable,
+    "latency_ms": latency_ms,
+})
+\end{verbatim}
+
+These fields compare the returned evidence, citations, and policy outcome with each case definition, producing transparent metrics without an evaluator model.
+
 \subsubsection{Architecture}
 
 Evaluation operates on the public agent boundary and retains per-case answers, contexts, references, and measurements for optional RAGAS processing.

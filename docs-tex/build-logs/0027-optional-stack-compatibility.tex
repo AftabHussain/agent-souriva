@@ -9,6 +9,20 @@
 
 Bound the RAGAS 0.2 LangChain dependencies below 0.4 and changed local MLflow 3 storage from the deprecated file store to SQLite.
 
+The compatibility fix combines explicit evaluator bounds with a supported local tracking URI:
+
+\begin{verbatim}
+evaluation = [
+  "ragas>=0.2,<0.3",
+  "langchain>=0.2,<0.4",
+  "langchain-community>=0.2,<0.4",
+  "langchain-openai>=0.1,<0.4",
+]
+mlflow_tracking_uri: str = "sqlite:///mlflow.db"
+\end{verbatim}
+
+The upper bounds retain the module layout expected by RAGAS 0.2, and SQLite replaces the file-store backend rejected by MLflow 3.
+
 \subsubsection{Architecture}
 
 These changes affect only optional tracking and evaluator-model dependencies. Core API, retrieval, MCP, and mock-model behavior remain unchanged.

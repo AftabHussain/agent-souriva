@@ -9,6 +9,23 @@
 
 Included the API, benchmark, and training entry points in package discovery, excluded successful tool-only responses from the unsupported document-answer metric, normalized imports with Ruff, and used native async ASGI request handling and tests.
 
+The principal packaging and metric corrections are visible in these focused lines:
+
+\begin{verbatim}
+[tool.setuptools]
+py-modules = ["app"]
+[tool.setuptools.packages.find]
+include = ["souriva*", "benchmarks*", "training*"]
+
+unsupported_answer = (
+    not result.answer.abstained
+    and Action.USE_TOOL not in result.actions
+    and not cited_ids
+)
+\end{verbatim}
+
+Package discovery now installs every executable module, while the metric excludes successful calculator results because tool-only answers intentionally have no document citations. Converting the API handlers and ASGI tests to \texttt{async} completed the Python 3.14 compatibility fix.
+
 \subsubsection{Architecture}
 
 Installed command modules and \texttt{app:app} now resolve outside a source checkout. Evaluation distinguishes grounded document claims from approved tool results, which do not require document citations.

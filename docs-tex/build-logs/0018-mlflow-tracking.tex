@@ -9,6 +9,18 @@
 
 Added centralized, opt-in MLflow logging around question requests.
 
+The request boundary measures the whole agent call and submits the completed trace to the optional tracker:
+
+\begin{verbatim}
+started = perf_counter()
+result = runtime.agent.ask(request.question)
+latency_ms = (perf_counter() - started) * 1000
+log_agent_run(request.question, result, latency_ms,
+              runtime.settings)
+\end{verbatim}
+
+Tracking after completion captures latency and final behavior in one place; \texttt{log\_agent\_run} returns immediately when MLflow is disabled.
+
 \subsubsection{Architecture}
 
 Tracking receives the completed agent result rather than instrumenting retrieval, models, or alignment separately. This keeps experiment concerns out of core behavior while retaining the full trace.

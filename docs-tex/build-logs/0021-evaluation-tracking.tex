@@ -9,6 +9,21 @@
 
 Added MLflow recording for aggregate evaluation metrics and case-level outputs, with a CLI flag on the evaluation runner.
 
+One MLflow run stores summary measurements alongside the full case records:
+
+\begin{verbatim}
+with mlflow.start_run(run_name="evaluation"):
+    mlflow.log_params({
+        "model_backend": settings.model_backend,
+        "top_k": settings.retrieval_top_k,
+        "cases": len(rows),
+    })
+    mlflow.log_metrics(metrics)
+    mlflow.log_dict({"cases": rows}, "evaluation.json")
+\end{verbatim}
+
+The aggregate values support run comparison, while the JSON artifact retains the evidence needed to audit each score.
+
 \subsubsection{Architecture}
 
 Evaluation tracking remains centralized beside agent-run tracking. The benchmark runner passes only measured metrics and observed case records after execution.

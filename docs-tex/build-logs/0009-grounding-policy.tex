@@ -9,6 +9,22 @@
 
 Added explicit post-generation checks for retrieval strength, valid citations, and model abstention.
 
+The fail-closed decision keeps only sufficiently relevant evidence and rejects missing or unknown citations:
+
+\begin{verbatim}
+eligible = {item.id: item for item in evidence
+            if item.score >= min_relevance}
+if not eligible:
+    return GroundedAnswer(ABSTENTION, (), True,
+                          "insufficient_retrieval_score")
+if not cited_ids or any(item_id not in eligible
+                        for item_id in cited_ids):
+    return GroundedAnswer(ABSTENTION, (), True,
+                          "missing_or_invalid_citations")
+\end{verbatim}
+
+This makes retrieval quality and citation membership enforceable application rules rather than relying only on the model prompt.
+
 \subsubsection{Architecture}
 
 The alignment module sits between model output and external responses. It converts a model reply into either a cited grounded answer or a standardized abstention with a machine-readable reason.

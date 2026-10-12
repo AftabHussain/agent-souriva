@@ -9,6 +9,18 @@
 
 Changed model-response citation parsing to preserve every bracketed identifier for grounding validation.
 
+The parser now forwards all emitted identifiers instead of silently filtering unknown ones:
+
+\begin{verbatim}
+def parse_citation_ids(text: str) -> tuple[str, ...]:
+    return tuple(re.findall(r"\[([^\[\]]+)\]", text))
+
+return ModelReply(text=text,
+                  citation_ids=parse_citation_ids(text))
+\end{verbatim}
+
+This preserves fabricated identifiers long enough for the alignment layer to detect that they are outside the retrieved evidence allow-list and abstain.
+
 \subsubsection{Architecture}
 
 The model adapter extracts citation syntax, while the alignment module remains responsible for checking each identifier against eligible retrieved evidence.

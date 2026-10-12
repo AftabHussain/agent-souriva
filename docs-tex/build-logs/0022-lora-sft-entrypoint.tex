@@ -9,6 +9,21 @@
 
 Added an optional supervised fine-tuning command for successful grounded traces, plus a validated example record.
 
+The training entry point constructs a parameter-efficient adapter and passes it to TRL:
+
+\begin{verbatim}
+lora = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05,
+                  target_modules="all-linear")
+config = SFTConfig(output_dir=str(args.output),
+                   dataset_text_field="text", num_train_epochs=1)
+trainer = SFTTrainer(model=model, args=config,
+                     train_dataset=dataset, tokenizer=tokenizer,
+                     peft_config=lora)
+trainer.train()
+\end{verbatim}
+
+Only the LoRA parameters are trained over validated trace text, keeping adaptation separate from the serving-time runtime.
+
 \subsubsection{Architecture}
 
 Training stays outside the runtime package. Trace formatting defines the integration contract between collected agent runs and TRL, while PEFT supplies a LoRA adapter over the configured base model.

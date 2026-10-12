@@ -9,6 +9,20 @@
 
 Added a trainer-neutral reward function and preference-pair record for future RL or direct preference optimization.
 
+The reward makes the desired grounding behavior and its penalties explicit:
+
+\begin{verbatim}
+reward = 0.0
+reward += 1.5 if signals.supported_answer else 0.0
+reward += 1.0 if signals.citations_correct else 0.0
+reward += 0.75 if signals.tool_use_correct else 0.0
+reward += 1.0 if signals.abstention_correct else 0.0
+reward -= 2.0 if signals.unsupported_claim else 0.0
+reward -= 1.5 if signals.invented_citation else 0.0
+\end{verbatim}
+
+Keeping the weights in a plain function makes the initial preference contract inspectable and independent of any particular trainer.
+
 \subsubsection{Architecture}
 
 The module converts measurable grounding outcomes into a scalar reward outside the runtime agent. A downstream TRL trainer can consume the normalized prompt, chosen response, and rejected response without changing evaluation logic.

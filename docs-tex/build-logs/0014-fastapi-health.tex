@@ -9,6 +9,22 @@
 
 Added centralized runtime construction and a FastAPI application with a health endpoint.
 
+The health route reads readiness information from the single composed runtime:
+
+\begin{verbatim}
+app = FastAPI(title="AgentSouriva", version="0.1.0")
+runtime = create_runtime()
+
+@app.get("/health")
+def health() -> dict:
+    return {"status": "ok",
+            "documents_ready": runtime.store.count > 0,
+            "chunks": runtime.store.count,
+            "model_backend": runtime.settings.model_backend}
+\end{verbatim}
+
+Constructing the runtime once gives every request the same store, tools, model, and agent while the route reports state without invoking the model.
+
 \subsubsection{Architecture}
 
 The runtime wires configuration, embeddings, persisted FAISS state, tools, model adapter, and agent in one place. The API imports that composition root rather than constructing components per request.

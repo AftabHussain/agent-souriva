@@ -9,6 +9,18 @@
 
 Added a four-case evaluation dataset, two source documents, a direct evaluation CLI, and optional RAGAS execution for faithfulness, answer relevance, context precision, and context recall.
 
+The command always computes direct metrics and runs model-judged RAGAS metrics only when requested:
+
+\begin{verbatim}
+direct, rows = evaluate_cases(runtime.agent, cases)
+output = {"direct": direct}
+if args.ragas:
+    output["ragas"] = run_ragas(rows)
+print(json.dumps(output, indent=2))
+\end{verbatim}
+
+This conditional keeps the default benchmark local and reproducible while preserving an explicit path to evaluator-model scoring.
+
 \subsubsection{Architecture}
 
 The runner builds an isolated evaluation index, exercises the real runtime, then transforms observed answers and contexts into the RAGAS dataset schema. Model-judged metrics run only with \texttt{-\/-ragas}.

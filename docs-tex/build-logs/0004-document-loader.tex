@@ -9,6 +9,20 @@
 
 Added source-aware loading for PDF, Markdown, and UTF-8 text documents.
 
+The format branch preserves page information for PDFs and a document location for text files:
+
+\begin{verbatim}
+if suffix == ".pdf":
+    return [
+        DocumentPart(text=text, source=path.name,
+                     location=f"page {number}")
+        for number, page in enumerate(PdfReader(path).pages, start=1)
+        if (text := (page.extract_text() or "").strip())
+    ]
+\end{verbatim}
+
+Each extracted part carries its filename and location immediately, so later chunking and citation stages do not need to reconstruct provenance.
+
 \subsubsection{Architecture}
 
 The loader is the first RAG pipeline stage. It normalizes files into \texttt{DocumentPart} values while preserving filenames and page locations for downstream citations.

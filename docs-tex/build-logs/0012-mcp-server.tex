@@ -9,6 +9,20 @@
 
 Added the approved document tool surface and exposed document search, chunk lookup, and arithmetic through a FastMCP server.
 
+The MCP layer registers narrow functions and delegates their work to \texttt{DocumentTools}:
+
+\begin{verbatim}
+@mcp.tool()
+def search_documents(query: str, top_k: int = 4) -> list[dict]:
+    return tools.search_documents(query, top_k=max(1, min(top_k, 20)))
+
+@mcp.tool()
+def get_document_chunk(chunk_id: str) -> dict | None:
+    return tools.get_document_chunk(chunk_id)
+\end{verbatim}
+
+The decorators expose only these approved operations, while delegation keeps retrieval behavior independent of the MCP transport.
+
 \subsubsection{Architecture}
 
 \texttt{DocumentTools} contains transport-independent behavior. \texttt{mcp\_server} only constructs the configured store and maps approved methods to MCP, keeping protocol concerns out of retrieval and agent modules.

@@ -9,6 +9,19 @@
 
 Added a restricted arithmetic calculator for approved tool execution.
 
+The recursive evaluator accepts only numeric constants and explicitly listed arithmetic nodes:
+
+\begin{verbatim}
+if isinstance(node, ast.Constant) and type(node.value) in (int, float):
+    return float(node.value)
+if isinstance(node, ast.BinOp) and type(node.op) in _BINARY:
+    left, right = evaluate(node.left), evaluate(node.right)
+    return _BINARY[type(node.op)](left, right)
+raise ValueError("Only numeric arithmetic is allowed")
+\end{verbatim}
+
+Names, calls, and attributes never match an allowed branch, so they are rejected instead of being evaluated as Python code.
+
 \subsubsection{Architecture}
 
 The calculator is transport-independent so the agent and MCP server can share identical behavior.

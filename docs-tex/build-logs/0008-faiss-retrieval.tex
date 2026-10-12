@@ -9,6 +9,22 @@
 
 Added ranked vector search, score thresholding, and an ingestion pipeline function that joins loading, chunking, embedding, and index replacement.
 
+The search path converts FAISS positions back into source-aware evidence and applies the relevance floor:
+
+\begin{verbatim}
+scores, positions = self.index.search(query_vector, limit)
+for score, position in zip(scores[0], positions[0]):
+    if position < 0 or float(score) < min_score:
+        continue
+    chunk = self.chunks[int(position)]
+    results.append(Evidence(id=chunk.id, text=chunk.text,
+                            source=chunk.source,
+                            location=chunk.location,
+                            score=round(float(score), 6)))
+\end{verbatim}
+
+FAISS supplies scores and row positions; the sidecar supplies the text and citation metadata returned to callers.
+
 \subsubsection{Architecture}
 
 The retriever converts FAISS positions back into evidence objects carrying source, location, score, text, and stable citation ID.

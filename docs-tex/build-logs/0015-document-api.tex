@@ -9,6 +9,20 @@
 
 Added validated request and response schemas and \texttt{POST\ /documents} for local file ingestion.
 
+The endpoint passes validated paths and configured chunking limits into the shared ingestion pipeline:
+
+\begin{verbatim}
+@app.post("/documents", response_model=IngestResponse)
+def ingest_documents(request: DocumentsRequest) -> IngestResponse:
+    count = ingest_paths(runtime.store, request.paths,
+                         chunk_size=runtime.settings.chunk_size,
+                         overlap=runtime.settings.chunk_overlap)
+    return IngestResponse(chunks=count,
+                          sources=[p.name for p in request.paths])
+\end{verbatim}
+
+FastAPI validates the request schema, and the thin route replaces the runtime corpus before returning the resulting count and source names.
+
 \subsubsection{Architecture}
 
 The endpoint is a thin adapter over the RAG ingestion pipeline and shared runtime store. It accepts server-local paths for PDF, Markdown, and text files and replaces the active corpus.

@@ -13,6 +13,17 @@
 
 Added the installable \texttt{souriva} package, project metadata, dependency groups, ignore rules, and environment-driven runtime settings.
 
+The central settings object is the key configuration boundary:
+
+\begin{verbatim}
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="SOURIVA_")
+    data_dir: Path = Path("artifacts")
+    model_backend: Literal["mock", "openai-compatible"] = "mock"
+\end{verbatim}
+
+These declarations give every runtime component typed defaults while allowing each value to be overridden through a consistently prefixed environment variable.
+
 \subsubsection{Architecture}
 
 This establishes the configuration boundary shared by the API, retrieval, model, tracking, and evaluation components. Runtime artifacts are kept outside source control.

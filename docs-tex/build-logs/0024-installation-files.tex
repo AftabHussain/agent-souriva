@@ -9,6 +9,18 @@
 
 Added pip requirements entry points for runtime and development/evaluation environments and allowed newer Python versions when dependency wheels are available.
 
+The two requirements files select optional groups from the shared package metadata:
+
+\begin{verbatim}
+# requirements.txt
+-e .[mcp,tracking]
+
+# requirements-dev.txt
+-e .[dev,evaluation,mcp,tracking]
+\end{verbatim}
+
+Both environments therefore inherit one set of version constraints from \texttt{pyproject.toml}; the development entry point simply enables additional testing and evaluation tools.
+
 \subsubsection{Architecture}
 
 Core package metadata remains the dependency source of truth. Requirements files select the relevant optional groups rather than duplicating version constraints.

@@ -9,6 +9,25 @@
 
 Added a small OpenAI-compatible HTTP adapter and backend selector.
 
+The adapter serializes the grounded prompt into the standard chat-completions request shape:
+
+\begin{verbatim}
+context = "\n\n".join(
+    f"[{item.id}] {item.text}" for item in evidence
+)
+payload = {
+    "model": self.model,
+    "temperature": 0,
+    "messages": [
+        {"role": "system", "content": system},
+        {"role": "user", "content":
+         f"QUESTION:\n{question}\n\nEVIDENCE:\n{context}"},
+    ],
+}
+\end{verbatim}
+
+This small translation layer lets a locally served GPT-OSS model use the same \texttt{ModelAdapter} interface as the deterministic mock backend.
+
 \subsubsection{Architecture}
 
 GPT-OSS-20B serving is isolated behind the same \texttt{ModelAdapter} boundary as the mock. The adapter sends retrieved context to a chat-completions endpoint and returns a normalized reply.

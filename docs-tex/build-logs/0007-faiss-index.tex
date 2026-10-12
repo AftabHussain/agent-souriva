@@ -9,6 +9,21 @@
 
 Added exact inner-product indexing, metadata persistence, index restoration, and chunk lookup.
 
+Replacing the corpus rebuilds the vector index and persists it with its metadata sidecar:
+
+\begin{verbatim}
+def replace(self, chunks: Iterable[Chunk]) -> int:
+    self.chunks = list(chunks)
+    self.index = faiss.IndexFlatIP(self.embeddings.dimensions)
+    if self.chunks:
+        vectors = self.embeddings.embed(c.text for c in self.chunks)
+        self.index.add(vectors)
+    self.save()
+    return self.count
+\end{verbatim}
+
+Recreating \texttt{IndexFlatIP} makes replacement semantics explicit, while \texttt{save} writes both the FAISS data and the ordered chunk records needed to interpret its rows.
+
 \subsubsection{Architecture}
 
 \texttt{FaissStore} owns the vector index and its ordered chunk sidecar. The sidecar retains citation fields that FAISS itself does not store.

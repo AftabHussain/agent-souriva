@@ -9,6 +9,17 @@
 
 Added the model protocol, shared evidence and reply values, and a deterministic extractive mock backend.
 
+The protocol captures the narrow contract implemented by every model backend:
+
+\begin{verbatim}
+class ModelAdapter(Protocol):
+    def answer(
+        self, question: str, evidence: Sequence[Evidence]
+    ) -> ModelReply: ...
+\end{verbatim}
+
+Agent code therefore depends only on an \texttt{answer} operation that consumes evidence and returns normalized text plus citation identifiers, not on a particular inference library.
+
 \subsubsection{Architecture}
 
 The adapter separates agent behavior from model serving. Evidence enters through a small typed contract and model replies identify the chunk IDs they cite.

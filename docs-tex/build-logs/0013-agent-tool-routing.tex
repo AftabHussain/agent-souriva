@@ -9,6 +9,20 @@
 
 Added an explicit calculator route to the document agent and completed behavior for all four agent actions.
 
+An explicit prefix selects the calculator path before document retrieval begins:
+
+\begin{verbatim}
+def ask(self, question: str) -> AgentResult:
+    if question.lower().startswith("calculate:"):
+        expression = question.partition(":")[2].strip()
+        return self._calculate(expression)
+    evidence = self.retriever.search(
+        question, self.top_k, self.min_relevance
+    )
+\end{verbatim}
+
+This deterministic branch prevents arithmetic requests from reaching retrieval or the language model and confines execution to the injected approved calculator.
+
 \subsubsection{Architecture}
 
 Questions prefixed with \texttt{calculate:} take a bounded tool path. The calculator is injected as a callable, keeping the agent unaware of MCP transport and limiting tool access to an approved function.
