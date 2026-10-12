@@ -160,39 +160,124 @@ answer = request(
 
 \end{lstlisting}
 
-\begin{verbatim}
-def request(app, method, path, json):
-    async def send():
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(
-            transport=transport, base_url="http://test"
-        ) as client:
-            return await client.request(method, path, json=json)
-    return asyncio.run(send())
-
-response = request(
-    app, "POST", "/documents",
-    {"paths": [str(document)]},
-)
-answer = request(
-    app, "POST", "/ask",
-    {"question": "How does token authentication work?"},
-)
-\end{verbatim}
 
 On the server side, the corresponding FastAPI route declarations in \texttt{app.py} deserialize those JSON bodies into typed request objects and invoke the ingestion or agent flow. The excerpt below omits error handling and response-field assembly while retaining the implemented call path.
 
-\begin{verbatim}
+\noindent
+Listing~\ref{lst:fastapi-routes} illustrates the server-side
+handling of document ingestion and question-answering requests
+in AgentSouriva. FastAPI uses route decorators, such as
+\texttt{@app.post("/documents")}, to associate an HTTP method
+and URL path with a Python function. The corresponding
+handler functions, \texttt{ingest\_documents()} and
+\texttt{ask()}, are invoked when clients submit POST requests
+to \texttt{/documents} and \texttt{/ask}, respectively.
+
+Each handler declares a typed request parameter:
+\texttt{DocumentsRequest} or \texttt{AskRequest}. These are
+request schemas that FastAPI uses to deserialize and validate
+incoming JSON data, assuming they are defined as Pydantic
+models, which are Python classes that define the expected structure and data types of information, and automatically validate incoming data. For example, a JSON body containing a
+\texttt{question} field is converted into an
+\texttt{AskRequest} object, allowing the handler to access
+the submitted text through \texttt{request.question}.
+The \texttt{response\_model} argument similarly declares
+the expected response schema, which FastAPI uses for
+response validation and serialization.
+
+The \texttt{runtime} object provides access to application
+components, including the document store
+(\texttt{runtime.store}) and agent
+(\texttt{runtime.agent}). The \texttt{ingest\_documents()}
+handler delegates document processing to
+\texttt{ingest\_paths()}, whereas the \texttt{ask()}
+handler delegates question answering to
+\texttt{runtime.agent.ask()}. This separates HTTP request
+handling from the underlying application logic.
+
+Both handlers use \texttt{async def}, which declares
+coroutine functions that can support asynchronous execution.
+However, the illustrated calls to \texttt{ingest\_paths()}
+and \texttt{runtime.agent.ask()} are synchronous: neither
+call uses \texttt{await}. Consequently, if these operations
+perform blocking work, they also block the event-loop thread
+during execution. The \texttt{async} declaration alone does
+not make synchronous operations non-blocking.
+
+Finally, each handler constructs a typed response object,
+either \texttt{IngestResponse} or \texttt{AskResponse},
+which FastAPI serializes into the HTTP response body.
+The ellipses in the listing indicate implementation details
+omitted for clarity, rather than complete argument values.
+
+\begin{lstlisting}[
+    style=pythonlearning,
+    caption={FastAPI route handlers for document ingestion
+             and question answering},
+    label={lst:fastapi-routes}
+]
+
+# The @app.post decorator registers an HTTP endpoint.
+# When POST /documents is received, FastAPI calls
+# ingest_documents().
+#
+# response_model=IngestResponse specifies the response
+# schema used for validation and JSON serialization.
+
 @app.post("/documents", response_model=IngestResponse)
+
+# 'async def' declares a coroutine function, allowing
+# asynchronous operations within the route.
+#
+# 'request: DocumentsRequest' is a type annotation.
+# FastAPI uses it to parse and validate the incoming
+# JSON body into a DocumentsRequest object.
+
 async def ingest_documents(request: DocumentsRequest):
+
+    # runtime.store: the application's document store.
+    # request.paths: document paths extracted from the
+    # validated request object.
+    #
+    # ingest_paths() performs document ingestion.
+    # Its return value is assigned to 'count'.
+    # '...' represents arguments omitted in this excerpt.
+
     count = ingest_paths(runtime.store, request.paths, ...)
+
+    # Construct an IngestResponse object.
+    # 'chunks' receives the returned chunk count.
+    # 'sources' represents source-related response data.
+    # FastAPI serializes the response object into JSON.
+
     return IngestResponse(chunks=count, sources=...)
 
+
+# Register the POST /ask endpoint.
+# AskResponse specifies the expected response schema.
+
 @app.post("/ask", response_model=AskResponse)
+
+# FastAPI parses the incoming JSON body into AskRequest.
+# The request object provides access to the question.
+
 async def ask(request: AskRequest):
+
+    # runtime.agent: the agent instance used by the app.
+    # request.question: question supplied by the client.
+    #
+    # .ask() invokes the agent's question-answering flow.
+    # The result is stored in the variable 'result'.
+
     result = runtime.agent.ask(request.question)
+
+    # result.answer.text accesses the generated answer.
+    # AskResponse packages it into the response schema.
+    # FastAPI converts the returned object into JSON.
+
     return AskResponse(answer=result.answer.text, ...)
-\end{verbatim}
+
+\end{lstlisting}
 
 AgentSouriva retrieves evidence, invokes the configured model boundary when needed, validates the result, and returns JSON to the web interface for presentation to the user.
 
