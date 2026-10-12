@@ -63,32 +63,84 @@ def load_documents(paths: Iterable[Path]) -> list[DocumentPart]:
 def chunk_parts(
     parts: Iterable[DocumentPart], chunk_size: int = 900, overlap: int = 120
 ) -> list[Chunk]:
+    # Function inputs and output:
+    # - parts: Iterable[DocumentPart] means any collection/iterator of DocumentPart
+    #   objects that can be traversed with `for` (e.g., a list or generator).
+    # - chunk_size: target MAXIMUM number of source-text characters per chunk.
+    # - overlap: number of source-text characters reused between neighboring chunks.
+    # - `-> list[Chunk]` in the signature is a return-type annotation: this function
+    #   returns a list of Chunk objects, but Python does not enforce the hint itself.
+    #
+    # Validate arguments before processing. nonpositive chunk size, negative overlap, or 
+    # overlap >= chunk size.
     if chunk_size < 1 or overlap < 0 or overlap >= chunk_size:
+        # `raise` stops execution and reports invalid caller input.
         raise ValueError("chunk_size must be positive and overlap smaller than chunk_size")
 
+    # Start an empty output list. `: list[Chunk]` is a variable type annotation.
     chunks: list[Chunk] = []
+    # Each DocumentPart contains text plus its source and location (e.g., PDF page).
     for part in parts:
+        # `start` is the zero-based character index where the next chunk begins.
         start = 0
+        # Number chunks separately within EACH document part, starting at 1.
         number = 1
         while start < len(part.text):
+            # Propose an end position at most `chunk_size` characters after `start`.
+            # `min(...)` prevents the slice from extending past the end of the text if the text 
+            # is less than the chunk size
             end = min(start + chunk_size, len(part.text))
+            # If this is NOT the final chunk, try to end at a space so a word
+            # isn't cut between adjacent chunks.
             if end < len(part.text):
                 # Avoid cutting a word; a short backward search keeps chunk sizes predictable.
+                # `//` is integer (floor) division: chunk_size // 2 is half the
+                # target chunk size rounded down. The search begins halfway in,
+                # encouraging reasonably sized chunks rather than very short ones.
+                # str.rfind(" ", lo, hi) finds the LAST space in [lo, hi), returning
+                # its character index, or -1 if no space exists in that interval.
                 boundary = part.text.rfind(" ", start + chunk_size // 2, end)
+                # Conditional expression: X if condition else Y.
+                # Use the space as the chunk boundary only if it is after `start`;
+                # otherwise keep the original end (which may split a long word).
                 end = boundary if boundary > start else end
+            # Slice out the characters from start (inclusive) to end (exclusive).
+            # `.split()` splits on whitespace and discards repeated whitespace.
+            # `" ".join(...)` joins the pieces with single spaces, normalizing
+            # spaces, tabs, and newlines in the stored chunk text.
             text = " ".join(part.text[start:end].split())
+            # Empty strings are false in Python; skip chunks with no visible text.
             if text:
+                # An f-string inserts the current source location and chunk number
+                # into a readable label (e.g., "page 2, chunk 3").
                 location = f"{part.location}, chunk {number}"
+                # Create a reproducible, content-dependent identifier:
+                # 1. Combine source filename, location label, and normalized text.
+                # 2. `.encode()` converts the string to UTF-8 bytes for SHA-256.
+                # 3. `.hexdigest()` turns the hash into hexadecimal characters.
+                # 4. `[:12]` keeps only its first 12 hex characters, making the ID
+                #    short. Truncation makes collisions more likely than with full SHA-256.
                 digest = hashlib.sha256(f"{part.source}:{location}:{text}".encode()).hexdigest()[
                     :12
                 ]
+                # Create one Chunk dataclass instance and add it to the result list.
+                # Its metadata allows retrieved text to be traced to its source.
                 chunks.append(
                     Chunk(id=f"chunk-{digest}", text=text, source=part.source, location=location)
                 )
+            # If this chunk reached the end of the part, there is nothing left
+            # to process. Exit the `while` loop using `break`.
             if end == len(part.text):
                 break
+            # Move the next window forward, but back up by `overlap` characters.
+            # E.g., with end=900 and overlap=120, the next chunk starts at 780,
+            # repeating source characters 780..899 to preserve nearby context.
+            # Note: very large overlaps plus early word boundaries can cause
+            # insufficient forward progress; typical settings keep overlap small.
             start = end - overlap
+            # `+= 1` means `number = number + 1` for the next chunk label.
             number += 1
+    # Return the accumulated list of Chunk objects for all input parts.
     return chunks
 
 
