@@ -13,6 +13,51 @@
 
 Added the installable \texttt{souriva} package, project metadata, dependency groups, ignore rules, and environment-driven runtime settings.
 
+\paragraph{Overall Project Structure and Configuration.}
+AgentSouriva uses three complementary files to organize its Python project.
+The \texttt{pyproject.toml} file defines project metadata, build and
+installation requirements, dependencies, and development tool configurations.
+The \texttt{config.py} file manages runtime settings, including storage,
+retrieval parameters, model selection, and experiment tracking.
+Finally, \texttt{\_\_init\_\_.py} identifies the \texttt{souriva}
+directory as a Python package, executes package initialization code when
+imported, and exposes package-level information such as
+\texttt{\_\_version\_\_}. In summary, \texttt{pyproject.toml}
+configures the software project, \texttt{config.py} configures the
+running application, and \texttt{\_\_init\_\_.py} defines the
+package's initialization and public interface.
+
+\paragraph{Python Project Configuration (\texttt{pyproject.toml}).}
+The \texttt{pyproject.toml} file is the standard configuration file for a Python project. It defines how the project is built and installed, specifies package metadata (e.g., name, version, and supported Python versions), and declares required and optional dependencies. For AgentSouriva, core dependencies support API serving, document processing, and retrieval, while optional dependency groups provide additional capabilities such as MCP integration, evaluation, training, and experiment tracking. The file also configures development tools, including \texttt{pytest} for testing and \texttt{ruff} for linting and formatting. By centralizing these settings, \texttt{pyproject.toml} simplifies installation, dependency management, and development.
+
+\paragraph{Runtime Configuration (\texttt{config.py}).}
+AgentSouriva centralizes its runtime configuration in a
+\texttt{Settings} class that inherits from Pydantic's
+\texttt{BaseSettings}. This separates configurable parameters
+from application logic, allowing behavior to be changed without
+modifying source code. Settings are loaded from environment
+variables prefixed with \texttt{SOURIVA\_} or a local
+\texttt{.env} file, falling back to predefined defaults.
+Pydantic also validates and converts values according to their
+declared types, while \texttt{Literal} restricts the model
+backend to supported options.
+
+The configuration covers storage locations, embedding
+dimensions, document chunking and overlap, retrieval limits
+and relevance thresholds, model backend and connection details,
+and MLflow experiment tracking. The \texttt{@property}
+decorator defines computed paths for the FAISS index and its
+associated metadata, ensuring that both remain consistent with
+the configured storage directory and index name.
+
+Finally, the \texttt{get\_settings()} function uses Python's
+\texttt{@lru\_cache} decorator to instantiate the configuration
+only once and reuse it across subsequent calls. This avoids
+repeated environment parsing and provides a consistent
+configuration throughout the running process. Together, these
+mechanisms provide centralized, validated, environment-specific,
+and reusable runtime configuration.
+
 The central settings object is the key configuration boundary:
 
 \begin{verbatim}

@@ -133,14 +133,16 @@ calculate(expression)
 
 The MCP interface uses the same persisted retrieval index and runtime configuration as the main API. It is an interface to the existing capabilities, not a separate retrieval implementation.
 
-\aftabnote{RESOLVED-- give an example of an mcp based interaction and a non-mcp based interaction, make it clear the communicating entities}
+%\aftabnote{RESOLVED-- give an example of an mcp based interaction and a non-mcp based interaction, make it clear the communicating entities}
 
 \paragraph{MCP-based interaction.}
 An MCP-compatible host, such as an IDE assistant or another agent runtime, acts as the MCP client. It starts or connects to the AgentSouriva MCP server over standard input and output, discovers the \texttt{search\_documents} tool, and invokes it with a query. The AgentSouriva MCP server receives that tool call and delegates it to \texttt{DocumentTools}.
 
-\aftabnote{RESOLVED-- what is documenttools? mention here}
+%\aftabnote{RESOLVED-- what is documenttools? mention here}
 
-\texttt{DocumentTools} is the transport-independent approved-tool wrapper defined in \path{souriva/tools.py}. It holds the shared \texttt{FaissStore} and exposes three bounded operations: searching indexed documents, retrieving one chunk by its stable identifier, and evaluating restricted arithmetic. The MCP functions in \path{souriva/mcp_server.py} are thin protocol adapters that call these methods; \texttt{DocumentTools} performs the reusable application operation without depending on MCP itself. For a search call, it queries the shared FAISS index and converts the resulting evidence objects into dictionaries before the MCP server sends them back to the client. The communicating entities are therefore the external MCP host and the AgentSouriva MCP server; the user interacts with the host rather than issuing the tool call directly.
+\texttt{DocumentTools} is the transport-independent approved-tool wrapper defined in \path{souriva/tools.py}.
+
+DocumentTools, defined in souriva/tools.py, is a wrapper groups the small set of operations that are explicitly allowed to be invoked -- Its methods contain no HTTP- or MCP-specific code, so different interfaces can reuse the same implementation. It holds the shared \texttt{FaissStore} and exposes three bounded operations: searching indexed documents, retrieving one chunk by its stable identifier, and evaluating restricted arithmetic. The MCP functions in \path{souriva/mcp_server.py} are thin protocol adapters that call these methods; \texttt{DocumentTools} performs the reusable application operation without depending on MCP itself. For a search call, it queries the shared FAISS index and converts the resulting evidence objects into dictionaries before the MCP server sends them back to the client. The communicating entities are therefore the external MCP host and the AgentSouriva MCP server; the user interacts with the host rather than issuing the tool call directly.
 
 \paragraph{Non-MCP HTTP interaction.}
 A web front end or command-line client can instead send \texttt{POST\ /retrieve} with a JSON query directly to the AgentSouriva FastAPI server. FastAPI calls the same underlying retrieval store and returns ranked evidence as an HTTP JSON response. The communicating entities are the HTTP client and the AgentSouriva FastAPI server, and no MCP host, tool discovery, or MCP transport participates. This form is appropriate when an application already integrates with AgentSouriva as an HTTP service; MCP is appropriate when an agent host needs AgentSouriva capabilities exposed as discoverable tools.
