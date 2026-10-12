@@ -20,7 +20,15 @@ Method & Endpoint & Purpose \\
 
 \subsection{Document Ingestion Interface}
 
-The \texttt{/documents} endpoint accepts a JSON object containing file paths. It builds the index and source-aware citation metadata for those files. A later ingestion replaces the active corpus. Request bodies are transmitted as \texttt{application/json}.
+\aftabnote{RESOLVED-- about these interfaces, make it clear who requests, and to whom a request is made? And when do these requests happen in what situation, like can you give an example? like these endpoints there are endpoints to whom and being accessed by whom? make it clear in this section}
+
+The endpoints belong to the AgentSouriva FastAPI server. A separate HTTP client---for example, an administration script, command-line client, web front end, test harness, or another service---sends requests to that server. The client does not call the retrieval store or model directly. An operator or administration process calls \texttt{/documents} when establishing or refreshing the searchable document collection. After that collection is ready, a user-facing application calls \texttt{/ask} when it needs a complete grounded answer, or \texttt{/retrieve} when it needs ranked evidence without answer generation. A deployment monitor can call \texttt{/health} at any time to check readiness.
+
+For example, an administrator can first use a command-line HTTP client to send document paths to \texttt{POST\ /documents}. Later, when a user submits a question in a web interface, that web interface acts as the HTTP client and sends the question to \texttt{POST\ /ask}. AgentSouriva retrieves evidence, invokes the configured model boundary when needed, validates the result, and returns JSON to the web interface for presentation to the user.
+
+\aftabnote{RESOLVED-- what is the meaning of the following sentence? can you expand on what later ingestion you mean?}
+
+The \texttt{/documents} endpoint accepts a JSON object containing file paths and builds the index and source-aware citation metadata for those files. Ingestion is replacement-based rather than append-based: each successful call makes the submitted files the complete active corpus and replaces the previously indexed chunks. For example, if one request indexes \texttt{architecture.md} and \texttt{api.txt}, and a later request submits only \texttt{handbook.pdf}, subsequent \texttt{/retrieve} and \texttt{/ask} requests search \texttt{handbook.pdf} rather than the earlier two files. This later ingestion is useful when an operator publishes a revised or entirely different collection. Request bodies are transmitted as \texttt{application/json}.
 
 A representative request-body structure from the project documentation is:
 
@@ -84,5 +92,13 @@ calculate(expression)
 \end{verbatim}
 
 The MCP interface uses the same persisted retrieval index and runtime configuration as the main API. It is an interface to the existing capabilities, not a separate retrieval implementation.
+
+\aftabnote{RESOLVED-- give an example of an mcp based interaction and a non-mcp based interaction, make it clear the communicating entities}
+
+\paragraph{MCP-based interaction.}
+An MCP-compatible host, such as an IDE assistant or another agent runtime, acts as the MCP client. It starts or connects to the AgentSouriva MCP server over standard input and output, discovers the \texttt{search\_documents} tool, and invokes it with a query. The AgentSouriva MCP server receives that tool call, delegates it to \texttt{DocumentTools}, searches the shared FAISS index, and sends the structured evidence results back to the MCP client. The communicating entities are therefore the external MCP host and the AgentSouriva MCP server; the user interacts with the host rather than issuing the tool call directly.
+
+\paragraph{Non-MCP HTTP interaction.}
+A web front end or command-line client can instead send \texttt{POST\ /retrieve} with a JSON query directly to the AgentSouriva FastAPI server. FastAPI calls the same underlying retrieval store and returns ranked evidence as an HTTP JSON response. The communicating entities are the HTTP client and the AgentSouriva FastAPI server, and no MCP host, tool discovery, or MCP transport participates. This form is appropriate when an application already integrates with AgentSouriva as an HTTP service; MCP is appropriate when an agent host needs AgentSouriva capabilities exposed as discoverable tools.
 
 % Optional reviewer note: \aftabnote{Write a review note here.}
