@@ -4,8 +4,10 @@
 
 # A decorator that saves a function's result and reuses it on later calls.
 from functools import lru_cache
+
 # Path represents filesystem paths and provides convenient path operations.
 from pathlib import Path
+
 # Literal restricts a setting to a fixed set of allowed string values.
 from typing import Literal
 
