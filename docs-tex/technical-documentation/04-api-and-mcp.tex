@@ -28,7 +28,137 @@ For example, an administrator can first use a command-line HTTP client to send d
 
 \aftabnote{RESOLVED-- here give code listings of actually how are teh calls made in the code, I think you already have them implemented in the source}
 
-The repository's API tests exercise this client-to-server path with \texttt{httpx}. The following excerpt from \texttt{tests/test\_api\_documents.py} shows the reusable in-process HTTP client and the two calls. A deployed web or command-line client sends the same methods, paths, and JSON bodies over the network rather than through \texttt{ASGITransport}.
+The repository's API tests exercise this client-to-server path with \texttt{httpx}. A deployed web or command-line client sends the same methods, paths, and JSON bodies over the network rather than through \texttt{ASGITransport}.
+
+\noindent
+Listing~\ref{lst:api-test} illustrates an in-process
+HTTP testing pattern for AgentSouriva. The helper function
+\texttt{request()} provides a synchronous interface for
+sending HTTP requests to the application. Inside it, the
+nested asynchronous function \texttt{send()} performs the
+actual request using \texttt{httpx.AsyncClient}. The
+\texttt{httpx.ASGITransport} class routes requests directly
+to the FastAPI application through the ASGI interface,
+eliminating the need to start an external web server.
+Within \texttt{send()}, the \texttt{await} keyword suspends
+the coroutine while the asynchronous request is being
+processed, allowing the event loop to execute other ready
+tasks. The \texttt{async with} construct automatically
+manages the HTTP client's lifecycle, including closing it
+when the block exits. The outer \texttt{request()} function
+uses \texttt{asyncio.run(send())} to execute the coroutine
+through an event loop and return the resulting HTTP response
+to synchronous test code. This helper is then reused to
+test the document ingestion endpoint (\texttt{/documents})
+and question-answering endpoint (\texttt{/ask}), allowing
+HTTP-level application behavior to be tested without
+starting a separate server process.
+
+\begin{lstlisting}[style=pythonlearning,
+caption={Testing AgentSouriva's HTTP API in-process},
+label={lst:api-test}]
+
+import asyncio
+import httpx
+
+# Helper function for sending HTTP requests to an ASGI app.
+# Parameters:
+#   app    : FastAPI/ASGI application being tested
+#   method : HTTP method, e.g., "GET" or "POST"
+#   path   : API endpoint, e.g., "/documents"
+#   json   : Python object sent as the JSON request body
+
+def request(app, method, path, json):
+
+    # 'async def' declares an asynchronous function.
+    # It can use 'await' for asynchronous operations.
+    # This nested function captures the arguments of
+    # the enclosing request() function.
+
+    async def send():
+
+        # ASGITransport connects HTTPX directly to the app.
+        # Requests are handled inside the Python process,
+        # without starting a web server or opening a port.
+        transport = httpx.ASGITransport(app=app)
+
+        # AsyncClient supports asynchronous HTTP requests.
+        # 'async with' automatically closes the client
+        # when the block finishes.
+        #
+        # base_url supplies a base for relative paths.
+        # "http://test" is not contacted over the network.
+
+        async with httpx.AsyncClient(
+            transport=transport,
+            base_url="http://test"
+        ) as client:
+
+            # 'await' suspends execution until the
+            # asynchronous HTTP request completes.
+            #
+            # method and path select the API operation.
+            # json=json serializes the supplied Python
+            # object into the HTTP JSON request body.
+            #
+            # The result is an httpx.Response object.
+
+            return await client.request(
+                method, path, json=json
+            )
+
+    # asyncio.run() starts an event loop, executes the
+    # coroutine returned by send(), and returns its result.
+    #
+    # This makes the asynchronous operation callable
+    # from synchronous test code.
+    # It requires that no event loop is already running.
+
+    return asyncio.run(send())
+
+
+# -------------------------------------------------------
+# Example 1: Document ingestion
+# -------------------------------------------------------
+
+# Assume 'app' is the FastAPI application and
+# 'document' is a Path pointing to a test document.
+#
+# POST /documents submits the document path for
+# processing by the application's ingestion endpoint.
+#
+# str(document) converts a Path object into a string.
+
+response = request(
+    app,
+    "POST",
+    "/documents",
+    {"paths": [str(document)]},
+)
+
+
+# -------------------------------------------------------
+# Example 2: Question answering
+# -------------------------------------------------------
+
+# POST /ask sends a question to the agent.
+# The endpoint can retrieve relevant document
+# evidence and produce a grounded response.
+
+answer = request(
+    app,
+    "POST",
+    "/ask",
+    {"question": "How does token authentication work?"},
+)
+
+# Both 'response' and 'answer' are HTTP response objects.
+# Their status codes and JSON bodies can be inspected:
+#
+# answer.status_code
+# answer.json()
+
+\end{lstlisting}
 
 \begin{verbatim}
 def request(app, method, path, json):

@@ -37,3 +37,37 @@
 \setlength{\parindent}{1.2em}
 \setlength{\parskip}{0pt}
 \setlength{\emergencystretch}{2em}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Colors for Python source listings
+\definecolor{codebg}{RGB}{248,249,250}
+\definecolor{codeblue}{RGB}{35,75,145}
+\definecolor{codegreen}{RGB}{45,110,70}
+\definecolor{codered}{RGB}{155,65,65}
+\definecolor{codegray}{RGB}{115,115,115}
+
+\lstdefinestyle{pythonlearning}{
+    language=Python,
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{codeblue}\bfseries,
+    commentstyle=\color{codegreen}\itshape,
+    stringstyle=\color{codered},
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    numbersep=10pt,
+    frame=single,
+    rulecolor=\color{codegray!35},
+    framesep=8pt,
+    breaklines=true,
+    breakatwhitespace=true,
+    showstringspaces=false,
+    keepspaces=true,
+    columns=fullflexible,
+    tabsize=4,
+    morekeywords={async,await},
+    xleftmargin=12pt,
+    framexleftmargin=12pt
+}
