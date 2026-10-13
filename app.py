@@ -28,6 +28,53 @@ async def health() -> dict:
     }
 
 
+# ---------------------------------------------------------------------
+# Document Retrieval FastAPI Endpoint
+# ---------------------------------------------------------------------
+# This endpoint allows a client to search AgentSouriva's indexed
+# documents and retrieve relevant evidence without invoking an LLM.
+#
+# 1. @app.post("/retrieve", response_model=RetrieveResponse)
+#    - Registers retrieve() as the handler for POST /retrieve.
+#    - response_model specifies the expected response structure,
+#      which FastAPI uses for validation and JSON serialization.
+#
+# 2. def retrieve(request: RetrieveRequest) -> RetrieveResponse:
+#    - Defines a synchronous request handler. FastAPI executes
+#      synchronous handlers in a thread pool.
+#    - RetrieveRequest is a Pydantic model used to parse and validate
+#      the incoming JSON body (e.g., {"query": "authentication",
+#      "top_k": 3}).
+#    - The -> syntax specifies the expected return type.
+#
+# 3. runtime.store.search(...)
+#    - runtime.store is the application's document search store.
+#    - request.query contains the client's search question.
+#    - request.top_k limits the number of retrieved chunks.
+#    - runtime.settings.min_relevance supplies the minimum acceptable
+#      similarity score.
+#    - In FaissStore, search() embeds the query, performs FAISS
+#      inner-product similarity search, filters low-scoring results,
+#      and returns a list of Evidence objects.
+#
+# 4. RetrieveResponse(evidence=[item.__dict__ for item in evidence])
+#    - This is a list comprehension that iterates over the retrieved
+#      Evidence objects.
+#    - __dict__ is a Python attribute containing an object's instance
+#      attributes as a dictionary (for these Evidence dataclasses).
+#    - For example, an Evidence object becomes:
+#      {"id": "chunk-123", "text": "...", "source": "doc.pdf",
+#       "location": "page 2", "score": 0.75}
+#    - RetrieveResponse wraps the dictionaries in the response schema.
+#    - FastAPI serializes the validated response into HTTP JSON.
+#
+# Overall flow:
+# Client JSON -> FastAPI validation -> retrieve() -> FaissStore.search()
+#             -> Evidence objects -> dictionaries -> JSON response.
+#
+# Design distinction: /retrieve only returns matching document
+# evidence. It does not generate answers; that is handled by /ask.
+# ---------------------------------------------------------------------
 @app.post("/documents", response_model=IngestResponse)
 async def ingest_documents(request: DocumentsRequest) -> IngestResponse:
     try:

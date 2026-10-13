@@ -27,7 +27,7 @@ Tracking receives the completed agent result rather than instrumenting retrieval
 
 \subsubsection{Design notes}
 
-Each run records configuration, latency, abstention, evidence and scores, response, citations, actions, and tool use. Tracking defaults off so the core install remains light; enabling it without the dependency produces a direct installation message.
+Each run records configuration, latency, abstention, evidence and scores, response, citations, actions, and tool use. MLflow tracking is disabled by default, so it is not required for normal AgentSouriva operation. If tracking is enabled without installing the optional MLflow dependencies, the application reports that the tracking extra must be installed.
 
 \subsubsection{Verification}
 

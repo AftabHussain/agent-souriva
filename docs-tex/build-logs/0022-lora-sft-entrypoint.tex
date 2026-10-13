@@ -9,7 +9,7 @@
 
 Added an optional supervised fine-tuning command for successful grounded traces, plus a validated example record.
 
-The training entry point constructs a parameter-efficient adapter and passes it to TRL:
+The training entry point constructs a parameter-efficient LoRA adapter and passes it to \texttt{SFTTrainer} from Hugging Face's Transformer Reinforcement Learning (TRL) library:
 
 \begin{verbatim}
 lora = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05,

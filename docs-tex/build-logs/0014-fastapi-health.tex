@@ -9,7 +9,7 @@
 
 Added centralized runtime construction and a FastAPI application with a health endpoint.
 
-The health route reads readiness information from the single composed runtime:
+The health endpoint reads status from the shared application runtime, which contains the configured settings, document store, tools, model, and agent.
 
 \begin{verbatim}
 app = FastAPI(title="AgentSouriva", version="0.1.0")
