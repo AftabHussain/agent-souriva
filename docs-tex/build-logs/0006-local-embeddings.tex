@@ -7,21 +7,102 @@
 
 \subsubsection{Change}
 
-Added deterministic normalized feature-hashing embeddings.
+Added a deterministic, model-free embedding mechanism using
+\emph{feature hashing}. The \texttt{HashEmbeddings} class converts
+text into fixed-dimensional numerical vectors without requiring
+a pretrained embedding model or external service. This makes
+it suitable for offline development, reproducible testing,
+and lightweight document retrieval. This allows the retrieval pipeline to be developed and tested
+without depending on external embedding models, making it
+easier to isolate implementation issues, establish a reproducible
+baseline, and evaluate individual system components before
+introducing more sophisticated semantic embeddings.
 
-The embedding loop maps each token to a signed dimension and normalizes the finished vector:
+\paragraph{Embedding construction.}
+The \texttt{\_embed\_one()} method begins by initializing a
+zero-valued NumPy vector of the configured dimensionality
+(384 by default). It converts the input text to lowercase
+and extracts word-like tokens using the regular expression
+\texttt{TOKEN\_PATTERN}. Each token is then mapped into the
+vector through the following procedure:
 
-\begin{verbatim}
-for token in TOKEN_PATTERN.findall(text.lower()):
-    digest = hashlib.blake2b(token.encode(), digest_size=8).digest()
+\begin{lstlisting}[
+    style=pythonlearning,
+    caption={Deterministic feature hashing and vector normalization},
+    label={lst:hash-embedding}
+]
+vector = np.zeros(self.dimensions, dtype="float32")
+tokens = TOKEN_PATTERN.findall(text.lower())
+
+for token in tokens:
+    # Generate an 8-byte (64-bit) deterministic hash.
+    digest = hashlib.blake2b(
+        token.encode(), digest_size=8
+    ).digest()
+
+    # Convert the hash bytes into an integer.
     value = int.from_bytes(digest)
-    vector[value % self.dimensions] += 1.0 if value & 1 else -1.0
+
+    # Map the token to a vector dimension using modulo.
+    # Add +1 or -1 depending on the hash's lowest bit.
+    vector[value % self.dimensions] += (
+        1.0 if value & 1 else -1.0
+    )
+
+# Compute the Euclidean (L2) norm of the vector.
 norm = np.linalg.norm(vector)
+
+# Normalize nonzero vectors to unit length.
 if norm:
     vector /= norm
-\end{verbatim}
+\end{lstlisting}
 
-The fixed hash function makes vectors reproducible without downloading a model, and normalization makes inner product usable as cosine-style similarity.
+\noindent
+The BLAKE2b hash function produces a reproducible 64-bit
+value for each token. Converting this hash into an integer
+allows two operations: \texttt{value \% self.dimensions}
+selects the vector position using the modulo operator,
+while \texttt{value \& 1} examines the lowest binary bit
+to determine whether to add $+1$ or $-1$. Repeated
+occurrences of a token accumulate at the same position.
+Different tokens may also map to the same dimension,
+a phenomenon known as a \emph{hash collision}.
+
+\paragraph{Vector normalization and similarity.}
+After processing all tokens, the resulting vector is
+normalized by its Euclidean norm:
+
+\[
+    \hat{\mathbf{v}} =
+    \frac{\mathbf{v}}{\|\mathbf{v}\|_2}.
+\]
+
+This produces a unit-length vector whenever the original
+vector is nonzero. Consequently, the inner product of
+two normalized vectors equals their cosine similarity:
+
+\[
+    \hat{\mathbf{u}}^\top\hat{\mathbf{v}}
+    = \cos(\theta).
+\]
+
+This is particularly relevant because AgentSouriva uses
+FAISS with an inner-product index
+(\texttt{faiss.IndexFlatIP}) for retrieval. Zero vectors
+are left unchanged to avoid division by zero.
+
+\paragraph{Design rationale and limitations.}
+Unlike learned semantic embeddings, feature hashing does
+not capture contextual meaning or word order. It represents
+text through deterministic token-derived features, so
+similarity primarily reflects shared lexical features
+rather than semantic equivalence. Nevertheless, the
+approach is computationally inexpensive, requires no
+model download or training, and produces reproducible
+vectors for the same input and configuration. It therefore
+provides a useful baseline for testing AgentSouriva's
+indexing, retrieval, and grounding pipeline independently
+of an external embedding model.
 
 \subsubsection{Architecture}
 

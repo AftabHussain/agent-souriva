@@ -1,7 +1,7 @@
 % Migrated from legacy Markdown source: 0003-gpt-oss-adapter.md (all source sections and text preserved)
 % Converted to plain LaTeX for the AgentSouriva development reference.
 
-\subsection{GPT-OSS-compatible model adapter}
+\subsection{GPT-OSS-compatible model adapter and citation validation}
 
 \commitlink{d26e8364efbe4d0a2cf02d8dc6e193e386948c34}{d26e836}
 
@@ -27,6 +27,40 @@ payload = {
 \end{verbatim}
 
 This small translation layer lets a locally served GPT-OSS model use the same \texttt{ModelAdapter} interface as the deterministic mock backend.
+
+\paragraph{Citation Validation Using an Allow-List.}
+Here we validate model-generated citations by checking them
+against the evidence actually supplied to the model. Since a language
+model may generate nonexistent citation identifiers, the system uses
+an \emph{allow-list}: only identifiers belonging to the supplied
+evidence are accepted. This check is implemented as follows:
+
+\begin{lstlisting}[
+    style=pythonlearning,
+    caption={Filtering model-generated citations against supplied evidence},
+    label={lst:citation-validation}
+]
+# Retain only evidence IDs that appear in the generated text.
+valid = tuple(item.id for item in evidence if f"[{item.id}]" in text)
+\end{lstlisting}
+
+\noindent
+The expression iterates over each \texttt{Evidence} object in
+\texttt{evidence} and checks whether its identifier appears in the
+model-generated \texttt{text}, enclosed in square brackets.
+For example, if the supplied evidence contains identifiers
+\texttt{doc1}, \texttt{doc2}, and \texttt{doc3}, but the model
+generates citations \texttt{[doc1]}, \texttt{[doc2]}, and
+\texttt{[fake99]}, only \texttt{doc1} and \texttt{doc2} are retained.
+The \texttt{for} and \texttt{if} clauses form a generator expression
+that produces matching identifiers, while \texttt{tuple()} collects
+them into an immutable tuple. The resulting identifiers follow the
+order of the supplied evidence rather than their appearance in the
+generated text. Importantly, this mechanism verifies
+\emph{citation identity}, not \emph{semantic support}: it prevents
+unknown identifiers from entering the validated citation list, but
+does not establish whether the cited evidence actually supports
+the corresponding claim.
 
 \subsubsection{Architecture}
 
