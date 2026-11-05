@@ -1,8 +1,4 @@
-# AgentSouriva
-
-Technical Documentation and Development Log
-
-9 October 2026
+# docs Index
 
 ## Technical documentation
 
