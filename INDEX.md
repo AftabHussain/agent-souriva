@@ -1,0 +1,44 @@
+# AgentSouriva
+
+Technical Documentation and Development Log
+
+9 October 2026
+
+## Technical documentation
+
+- [Project Overview](technical-documentation/01-project-overview.md)
+- [System Architecture and Document Flow](technical-documentation/02-system-architecture.md)
+- [Features and Components](technical-documentation/03-features-and-components.md)
+- [API and MCP Interfaces](technical-documentation/04-api-and-mcp.md)
+- [Models and Runtime Configuration](technical-documentation/05-model-integration.md)
+- [Evaluation, Tracking, and Model Adaptation](technical-documentation/06-evaluation-and-adaptation.md)
+
+## Project Build Evolution
+
+- [Project skeleton and configuration](build-logs/0001-project-skeleton.md)
+- [Model adapter and local backend](build-logs/0002-model-adapter.md)
+- [GPT-OSS-compatible model adapter and citation validation](build-logs/0003-gpt-oss-adapter.md)
+- [Document loader: The First RAG Pipeline Stage](build-logs/0004-document-loader.md)
+- [Metadata-preserving document chunking](build-logs/0005-document-chunking.md)
+- [Local embedding backend](build-logs/0006-local-embeddings.md)
+- [Persistent FAISS index](build-logs/0007-faiss-index.md)
+- [FAISS retrieval](build-logs/0008-faiss-retrieval.md)
+- [Grounding and abstention policy](build-logs/0009-grounding-policy.md)
+- [Grounded agent flow](build-logs/0010-grounded-agent.md)
+- [Restricted calculator](build-logs/0011-approved-tools.md)
+- [MCP document and calculator tools](build-logs/0012-mcp-server.md)
+- [Agent calculator routing](build-logs/0013-agent-tool-routing.md)
+- [FastAPI runtime and health endpoint](build-logs/0014-fastapi-health.md)
+- [Document ingestion API](build-logs/0015-document-api.md)
+- [Retrieval API](build-logs/0016-retrieval-api.md)
+- [Grounded question API](build-logs/0017-question-api.md)
+- [MLflow agent-run tracking](build-logs/0018-mlflow-tracking.md)
+- [Direct RAG evaluation metrics](build-logs/0019-direct-evaluation.md)
+- [RAGAS evaluation runner](build-logs/0020-ragas-evaluation.md)
+- [MLflow evaluation tracking](build-logs/0021-evaluation-tracking.md)
+- [LoRA and QLoRA SFT entry point](build-logs/0022-lora-sft-entrypoint.md)
+- [Preference optimization reward contract](build-logs/0023-preference-reward.md)
+- [Installation entry points](build-logs/0024-installation-files.md)
+- [Dependency-backed verification fixes](build-logs/0025-verification-fixes.md)
+- [Complete model citation validation](build-logs/0026-citation-parser.md)
+- [Optional stack compatibility bounds](build-logs/0027-optional-stack-compatibility.md)

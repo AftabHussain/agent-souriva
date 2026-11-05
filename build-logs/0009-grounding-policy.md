@@ -1,0 +1,37 @@
+## Grounding and abstention policy
+
+**Source commit:** [`08e292a`](https://github.com/AftabHussain/agent-souriva/commit/08e292a17e678ad34b97e80fbbd28976a3d7e81c)
+
+### Change
+
+Added explicit post-generation checks for retrieval strength, valid citations, and model abstention.
+
+The fail-closed decision keeps only sufficiently relevant evidence and rejects missing or unknown citations:
+
+    eligible = {item.id: item for item in evidence
+                if item.score >= min_relevance}
+    if not eligible:
+        return GroundedAnswer(ABSTENTION, (), True,
+                              "insufficient_retrieval_score")
+    if not cited_ids or any(item_id not in eligible
+                            for item_id in cited_ids):
+        return GroundedAnswer(ABSTENTION, (), True,
+                              "missing_or_invalid_citations")
+
+This makes retrieval quality and citation membership enforceable application rules rather than relying only on the model prompt.
+
+### Architecture
+
+The alignment module sits between model output and external responses. It converts a model reply into either a cited grounded answer or a standardized abstention with a machine-readable reason.
+
+### Design notes
+
+Only evidence above the configured threshold is eligible. Citation IDs are deduplicated and resolved from that allow-list; replies without citations or with any unknown citation are rejected. This makes citation behavior inspectable rather than relying only on prompt compliance.
+
+### Verification
+
+Compiled source and tests and checked the diff. Unit cases cover accepted citations, weak retrieval, invented citations, and missing citations.
+
+### Result
+
+Unsupported output cannot pass through as an answer, and callers can distinguish why the system abstained.

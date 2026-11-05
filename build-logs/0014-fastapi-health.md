@@ -1,0 +1,37 @@
+## FastAPI runtime and health endpoint
+
+**Source commit:** [`b12701e`](https://github.com/AftabHussain/agent-souriva/commit/b12701ecdd6f114484eb3f5548f2acaef2cead9f)
+
+### Change
+
+Added centralized runtime construction and a FastAPI application with a health endpoint.
+
+The health endpoint reads status from the shared application runtime, which contains the configured settings, document store, tools, model, and agent.
+
+    app = FastAPI(title="AgentSouriva", version="0.1.0")
+    runtime = create_runtime()
+
+    @app.get("/health")
+    def health() -> dict:
+        return {"status": "ok",
+                "documents_ready": runtime.store.count > 0,
+                "chunks": runtime.store.count,
+                "model_backend": runtime.settings.model_backend}
+
+Constructing the runtime once gives every request the same store, tools, model, and agent while the route reports state without invoking the model.
+
+### Architecture
+
+The runtime wires configuration, embeddings, persisted FAISS state, tools, model adapter, and agent in one place. The API imports that composition root rather than constructing components per request.
+
+### Design notes
+
+Startup restores an existing local index when present. Health reports readiness-relevant state without making model calls or exposing paths and credentials.
+
+### Verification
+
+Compiled all modules, checked the diff, and added an isolated API test for an empty temporary data directory.
+
+### Result
+
+`uvicorn app:app` can expose process health and confirm the selected backend and indexed chunk count.
